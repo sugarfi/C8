@@ -1,0 +1,13 @@
+TODO:
+- dynamic linking
+    - load the .text section
+    - load .bss and .data
+    - perform magic checks
+    - make files relocatable
+- exit protected mode and write to disk
+    - or a v86 monitor
+- multithreading
+- users
+- networking
+- ansi codes
+- gui

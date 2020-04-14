@@ -1,0 +1,78 @@
+<ls
+Usage: ls [-l] [-h]
+Similar to the Unix ls command. It lists all the files in the current
+directory, which at the moment is the only one. It is one of the only
+built-in commands which does not use syscalls, except to write to stdout.
+In fact, it makes use of the same methods defined in the kernel header
+file.h. If the -l option is passed, it will also display file size and
+flags as well as names.
+Examples:
+$ ls
+csh.bin
+echo.bin
+ls.bin
+...
+$ ls -l
+4119 0 csh.bin
+4314 0 echo.bin
+4311 0 ls.bin
+...
+>
+<echo
+Usage: echo [-n] [-h] [STRING]...
+Similar to the Unix echo command. It prints each of the strings given to it
+to stdout. It also prints a trailing newline if the -n option is not passed.
+Examples:
+$ echo hi
+hi
+$ echo hi there
+hi there
+$ echo -n hi there
+hi there$
+>
+<cat
+Usage: cat [-h] FILE...
+Similar to the Unix cat command. However, it requires a file to be given; if
+one is not given, it will give an error rather than read from stdin.
+It takes every file passed to it, reads it, and prints the read text to stdout.
+Examples:
+$ cat hello.txt
+Hello, world!
+$ cat
+Usage: cat [-h] [FILE]...
+$ cat nonexistentfile.txt
+ERROR: Attempted to read nonexistent file
+>
+<help
+Usage: help [-h] CMD
+Prints the C8 help for a given command. It reads from the file help.c8,
+looking for the command specified. If a match is found, it prints the help for
+that command. Otherwise, it will print a blank line.
+Examples:
+$ help echo
+Usage: echo [-n] [-h] [STRING]...
+Similar to the Unix echo command. It prints each of the strings given to it
+...
+$ help nonexistentcmd
+
+>
+<csh
+Usage: csh
+Csh is C8's minimal shell. It allows the user to run commands.
+It is not very advanced, and does not provide variables or some
+of the things you would expect in a shell. It can only run .bin files.
+It is run on boot by the kernel, at address 0x30000, and loads all the files
+called by the user at 0x40000. It is not designed to be called by the user.
+There is no method to exit the shell short of throwing a segfault.
+Examples:
+$ csh
+$
+>
+<intro
+This is C8 OS, a hobby x86 OS written by sugarfi. It is totally written in C.
+It is very minimal at the moment, supporting only a few basic commands and
+without support for writing files. It uses C8 FS, which is similar to the TAR
+FS. To get started using the OS, try typing ls. Want to contribute? Go to the
+Github repo (github.com/sugarfi/C8) and do what you want. Then open a pull
+request. Have fun!
+>
