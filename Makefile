@@ -1,4 +1,5 @@
 .PHONY: all bin/kernel.bin bin/csh.o
+.DEFAULT_GOAL = all
 
 CC=gcc
 LD=ld
@@ -18,6 +19,9 @@ bin/kernel.bin: src/kernel/kernel.c bin/kernel.o
 
 $(APPS):
 	$(CC) $(CFLAGS) -static -I src/user -I src/user/lib -o src/user/files/bin/$@.o src/user/files/$@.c
+
+clean:
+	rm bin/*.o os.img bin/*.bin files.tar -f
 
 all: bin/boot.bin bin/kernel.bin $(APPS)
 	dd if=/dev/zero of=os.img bs=512 count=4096

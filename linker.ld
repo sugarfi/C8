@@ -1,6 +1,6 @@
 OUTPUT_FORMAT(binary);
 SECTIONS {
-    . = 0x10000;
+    . = 0x10000; /* Kernel starts at 1 MiB. */
 
     .text ALIGN (0x1000) : {
         *(.text)

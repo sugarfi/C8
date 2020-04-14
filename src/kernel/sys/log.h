@@ -3,6 +3,14 @@
 
 #include <dev/vga.h>
 
+#define log_info(s) log(s, LOG_INFO)
+
+#define log_warn(s) log(s, LOG_WARN)
+
+#define log_error(s) log(s, LOG_ERROR)
+
+#define log_fatal(s) log(s, LOG_FATAL)
+
 typedef struct {
     char* name;
     short color;
@@ -25,22 +33,6 @@ void log(char* s, int level) {
     vga_puts(name, color);
     vga_puts(": ", color);
     vga_puts(s, color);
-}
-
-void log_info(char* s) {
-    log(s, LOG_INFO);
-}
-
-void log_warn(char* s) {
-    log(s, LOG_WARN);
-}
-
-void log_error(char* s) {
-    log(s, LOG_ERROR);
-}
-
-void log_fatal(char* s) {
-    log(s, LOG_FATAL);
 }
 
 #endif
