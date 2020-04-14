@@ -24,12 +24,12 @@ void kmain(void) {
     dev_t stdin = {
         0,
         &dev_nop,
-        kgets,
+        &kgets,
     };
     dev_init(0, stdin);
     dev_t stdout = {
         1,
-        kputs,
+        &kputs,
         &dev_nop,
     };
     dev_init(1, stdout);
