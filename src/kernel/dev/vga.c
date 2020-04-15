@@ -126,14 +126,14 @@ void vga_puts(const char* s, short color) {
 }
 
 /* These two functions are required to avoid global variable in a header file. */
-void increment_vga_x(int i)
+void set_vga_x(int x)
 {
-	vga_x += i;
+	vga_x = x;
 }
 
-void increment_vga_y(int i)
+void set_vga_y(int y)
 {
-	vga_y += i;
+	vga_y = y;
 }
 
 int get_vga_x()

@@ -92,18 +92,18 @@ void kgets(char* out)
             vga_putc('\n', 0x07);
             return;
         } else if (this.ascii == '\b' && this.type == 0 && index > 0) {
-            increment_vga_x(-1);
+            set_vga_x(get_vga_x() - 1);
             vga_putc(' ', 0x07);
-            increment_vga_x(-1);
+            set_vga_x(get_vga_x() - 1);
             vga_move_cursor(get_vga_x(), get_vga_y());
             max--;
             index--;
         } else if (this.ascii == PS2_LEFT && this.type == 0 && index > 0) {
-            increment_vga_x(-1);
+            set_vga_x(get_vga_x() - 1);
             index--;
             vga_move_cursor(get_vga_x(), get_vga_y());
         } else if (this.ascii == PS2_RIGHT && this.type == 0 && index < (max - 1)) {
-            increment_vga_x(1);
+            set_vga_x(get_vga_x() + 1);
             index++;
             vga_move_cursor(get_vga_x(), get_vga_y());
         } else if (this.type == 0 && this.ascii >= ' ') {
