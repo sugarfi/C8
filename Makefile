@@ -1,4 +1,3 @@
-.PHONY: all bin/kernel.bin bin/csh.o
 .DEFAULT_GOAL = all
 
 CC=gcc
@@ -25,7 +24,7 @@ bin/boot.bin: src/boot/boot.asm
 	@mkdir bin -p
 	nasm -f elf32 $< -o bin/$(notdir $@)
 
-bin/kernel.bin: $(COBJECTS) src/kernel/entry.asm
+bin/kernel.bin: $(COBJECTS) src/kernel/entry.o
 	$(LD) $(addprefix bin/, $(notdir $(COBJECTS))) $(LDFLAGS) bin/entry.o -o bin/kernel.bin # noice
 
 $(APPS):
