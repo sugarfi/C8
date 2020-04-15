@@ -1,5 +1,10 @@
 #include <fs/file.h>
 
+void file_init()
+{
+	file_next_fd = 0;
+}
+
 file_t file_get(int addr)
 {
     /*

@@ -37,8 +37,7 @@ typedef struct
     unsigned char prefix[155];
 } __attribute__((packed)) file_t; // A raw file metadata entry
 
-
-int file_next_fd = 0; // The next file descriptor to assign
+extern int file_next_fd; // The next file descriptor to assign
 
 int open[FILE_LIMIT]; // The array of open files
 
