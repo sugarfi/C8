@@ -1,11 +1,5 @@
-#ifndef _C8_ENTRY
-#define _C8_ENTRY
-
-#include <fs/file.h>
-#include <fs/ops.h>
-#include <lib/kstdio.h>
-#include <mem/page.h>
-#include <mem/malloc.h>
+#ifndef _C8_SYSCALL
+#define _C8_SYSCALL
 
 typedef int (*syscall_t)(int, int, int, int, int, int);
 
