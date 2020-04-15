@@ -21,6 +21,8 @@ void kmain(void) {
     idt_load(&idt_desc);
     isr_install();
 
+    syscall_init();
+
     dev_t stdin = {
         0,
         &dev_nop,
