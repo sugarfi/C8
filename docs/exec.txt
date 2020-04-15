@@ -1,0 +1,15 @@
+OOF Executable Format
+OOF is the format for C8 OS. OOF stands for OOF Object Format.
+FORMAT
+- The first 4 bytes of an OOF file is the magic number: The ASCII
+  letters OOF followed by a NUL character.
+- Then comes the program header.
+    - The first 4 bytes of the program header are the address that
+      the program was linked at, ie. the address the program thinks
+      it starts from. When running a program, you should use paging
+      to map this address to something different.
+    - The next 4 bytes are the entry point of the program. This is
+      relative to the address above.
+    - Then there are 20 bytes of 0s to fill space in case we need it
+      in future versions of the format.
+- After that is the assembled code as a 32 bit binary.
