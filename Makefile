@@ -4,7 +4,6 @@ CC=gcc
 LD=ld
 CFLAGS=-ffreestanding -fno-pie -m32 -c -I src/kernel -I src/kernel/lib -nostdinc -nostdlib -std=c99 -O0
 LDFLAGS=-T linker.ld -melf_i386
-APPS=csh
 CSOURCES=$(wildcard src/kernel/*.c src/kernel/dev/*.c src/kernel/fs/*.c src/kernel/int/*.c src/kernel/mem/*.c src/kernel/lib/*.c src/kernel/sys/*.c)
 COBJECTS=$(CSOURCES:.c=.o)
 
@@ -27,14 +26,10 @@ bin/boot.bin: src/boot/boot.asm
 bin/kernel.bin: $(COBJECTS) src/kernel/entry.o
 	$(LD) $(addprefix bin/, $(notdir $(COBJECTS))) $(LDFLAGS) bin/entry.o -o bin/kernel.bin # noice
 
-$(APPS):
-	@mkdir src/user/files/bin -p
-	$(CC) $(CFLAGS) -static -I src/user -I src/user/lib -o src/user/files/bin/$@.o src/user/files/$@.c
-
 clean:
 	rm bin/*.o os.img bin/*.bin files.tar src/user/files/bin/*.o -f
 
-all: bin/boot.bin bin/kernel.bin $(APPS)
+all: bin/boot.bin bin/kernel.bin
 	dd if=/dev/zero of=os.img bs=512 count=4096
 	dd if=bin/boot.bin of=os.img conv=notrunc
 	dd if=bin/kernel.bin of=os.img conv=notrunc seek=1

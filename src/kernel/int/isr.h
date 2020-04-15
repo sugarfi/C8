@@ -13,4 +13,6 @@ void isr_install(void);
 
 int isr_handler(int ds, int old, int num);
 
+void isr_init(void);
+
 #endif
