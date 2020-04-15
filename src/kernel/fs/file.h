@@ -42,7 +42,6 @@ int file_next_fd = 0; // The next file descriptor to assign
 
 int open[FILE_LIMIT]; // The array of open files
 
-
 file_t file_get(int addr);
 
 #endif
