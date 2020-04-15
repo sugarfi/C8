@@ -7,22 +7,19 @@
 typedef void(*dev_write_t)(char*);
 typedef void(*dev_read_t)(char*);
 
-typedef struct {
+typedef struct
+{
     int fd;
     dev_write_t write;
     dev_read_t read;
 } dev_t;
 
-static dev_t devs[FILE_LIMIT];
 
-void dev_nop(char* data) {
-    return;
-}
+dev_t devs[FILE_LIMIT];
 
-void dev_init(int fd, dev_t dev) {
-    devs[fd] = dev;
-    open[fd] = (int) &dev;
-    file_next_fd = fd + 1;
-}
+
+void dev_nop(char* data);
+
+void dev_init(int fd, dev_t dev);
 
 #endif

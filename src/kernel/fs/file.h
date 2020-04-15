@@ -1,9 +1,8 @@
+/*
+ * file.h - declarations for file types and basic operations.
+*/
 #ifndef _C8_FILE
 #define _C8_FILE
-
-/*
-file.h - declarations for file types and basic operations.
-*/
 
 #include <lib/string.h>
 #include <sys/log.h>
@@ -15,11 +14,11 @@ file.h - declarations for file types and basic operations.
 
 #define FILE_LIMIT 1024 // Only 1024 files can be open at once
 
-const int FILE_SIZE = 512; // The size of one file metadata entry - 32 bytes
-const int FILE_ADDR = 0x2fe00; // The base address where files are loaded
-static int file_next_fd = 0; // The next file descriptor to assign
+#define FILE_SIZE 512 // The size of one file metadata entry - 32 bytes
+#define FILE_ADDR 0x2fe00 // The base address where files are loaded
 
-typedef struct {
+typedef struct
+{
     unsigned char name[100];
     unsigned char mode[8];
     unsigned char uid[8];
@@ -38,14 +37,12 @@ typedef struct {
     unsigned char prefix[155];
 } __attribute__((packed)) file_t; // A raw file metadata entry
 
-static int open[FILE_LIMIT]; // The array of open files
 
-file_t file_get(int addr) {
-    /*
-    Converts the specified address to a file binary entry. Assumes it points to a valid entry.
-    */
-    file_t* file = (file_t*) addr; // Make a pointer
-    return *file; // Return it
-}
+int file_next_fd = 0; // The next file descriptor to assign
+
+int open[FILE_LIMIT]; // The array of open files
+
+
+file_t file_get(int addr);
 
 #endif

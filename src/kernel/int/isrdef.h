@@ -1,9 +1,8 @@
+/*
+ * isrdef.h - Declarations for the assembly ISRs, see entry.asm
+*/
 #ifndef _C8_ISRDEF
 #define _C8_ISRDEF
-
-/*
-isrdef.h - Declarations for the assembly ISRs, see kernel.asm
-*/
 
 extern void isr_0(void);
 extern void isr_1(void);
