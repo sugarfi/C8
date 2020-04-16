@@ -3,6 +3,7 @@
 #include <sys/syscall.h>
 #include <mem/pageframe.h>
 #include <lib/kstdio.h>
+#include <fs/open.h>
 #include <fs/rw.h>
 
 void kmain(void) {

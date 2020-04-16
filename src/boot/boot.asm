@@ -3,7 +3,7 @@
 
 boot:
 
-    mov cx, 10 ; The number of 128-sector groups to read
+    mov cx, 11 ; The number of 128-sector groups to read
 
     read_loop:
         mov ah, 0x42 ; 0x42 is extended read

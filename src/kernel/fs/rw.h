@@ -2,11 +2,11 @@
 #define _C8_RW
 
 #include <lib/math.h>
-#include <lib/string.h>
 #include <sys/log.h>
 #include <fs/file.h>
+#include <lib/string.h>
 
-void file_read(char*, char*);
-void file_write(char*, char*);
+void file_read(file_t*, char*);
+void file_write(file_t*, char*);
 
 #endif
