@@ -116,3 +116,16 @@ void kgets(char* out)
         }
     }
 }
+
+char kgetchar()
+{
+    ps2_keypress_t this = ps2_get_key();
+    while (1)
+    {
+        if (this.type == 0 && this.ascii >= ' ')
+        {
+            vga_putc(this.ascii, 0x07);
+            return this.ascii;
+        }
+    }
+}

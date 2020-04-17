@@ -27,6 +27,7 @@ bin/kernel.bin: $(COBJECTS) src/kernel/entry.o
 	$(LD) $(addprefix bin/, $(notdir $(COBJECTS))) $(LDFLAGS) bin/entry.o -o bin/kernel.bin # noice
 
 src/user/files/bin/test.o: src/user/files/test.asm
+	@mkdir src/user/files/bin -p
 	nasm -f elf32 -o src/user/files/bin/test.o src/user/files/test.asm
 
 clean:

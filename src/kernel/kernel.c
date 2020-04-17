@@ -15,7 +15,7 @@ void kmain(void) {
     isr_install();
     syscall_init();
     pageframe_init();
-
+    
     file_t* file;
     file_open("bin/test.o", &file);
     file_exec(file);
