@@ -20,3 +20,7 @@ void* pmm_alloc(int size) {
     }
     return (void*) 0;
 }
+
+void pmm_free(void* ptr) { // TODO
+    return;
+}

@@ -4,7 +4,7 @@
 #include <mem/pageframe.h>
 #include <lib/kstdio.h>
 #include <fs/open.h>
-#include <fs/rw.h>
+#include <fs/exec.h>
 
 void kmain(void) {
     idt_desc.base = (unsigned int) &idt;
@@ -15,6 +15,10 @@ void kmain(void) {
     isr_install();
     syscall_init();
     pageframe_init();
+
+    file_t* file;
+    file_open("bin/test.o", &file);
+    file_exec(file);
 
     return;
 }

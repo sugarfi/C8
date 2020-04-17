@@ -26,10 +26,13 @@ bin/boot.bin: src/boot/boot.asm
 bin/kernel.bin: $(COBJECTS) src/kernel/entry.o
 	$(LD) $(addprefix bin/, $(notdir $(COBJECTS))) $(LDFLAGS) bin/entry.o -o bin/kernel.bin # noice
 
+src/user/files/bin/test.o: src/user/files/test.asm
+	nasm -f elf32 -o src/user/files/bin/test.o src/user/files/test.asm
+
 clean:
 	rm bin/*.o os.img bin/*.bin files.tar src/user/files/bin/*.o -f
 
-all: bin/boot.bin bin/kernel.bin
+all: bin/boot.bin bin/kernel.bin src/user/files/bin/test.o
 	dd if=/dev/zero of=os.img bs=512 count=4096
 	dd if=bin/boot.bin of=os.img conv=notrunc
 	dd if=bin/kernel.bin of=os.img conv=notrunc seek=1
