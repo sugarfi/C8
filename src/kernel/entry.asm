@@ -25,6 +25,14 @@ page_load_dir:
     pop ebp
     ret
 
+global page_flush_tlb
+page_flush_tlb:
+    push ebp
+    mov ebp, esp
+    mov	eax, cr3
+    mov	cr3, eax
+    pop ebp
+    ret
 
 extern isr_handler
 isr_base:
