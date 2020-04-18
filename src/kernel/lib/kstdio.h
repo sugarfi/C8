@@ -23,4 +23,6 @@ void kprintf(char* format, ...);
 
 void kgets(char* out);
 
+char kgetchar();
+
 #endif

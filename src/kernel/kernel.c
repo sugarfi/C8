@@ -7,10 +7,14 @@
 #include <fs/exec.h>
 
 void kmain(void) {
-    unsigned int page_dir[1024] __attribute__((aligned(4096)));
-    unsigned int page_table[1024] __attribute__((aligned(4096)));
+    static unsigned int page_dir[1024] __attribute__((aligned(4096)));
+    static unsigned int page_table[1024] __attribute__((aligned(4096)));
+
+    page_fill(page_dir, 0x02);
+    page_id(page_table, 0x03);
 
     page_dir[0] = ((unsigned int) page_table) | 3;
+    page_dir[1023] = ((unsigned int) page_dir) | 3;
 
     page_load_dir(page_dir);
     page_enable();

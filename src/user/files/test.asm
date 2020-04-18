@@ -1,9 +1,11 @@
-org 0x1000
+section .text
 
 mov edi, 0xb8000
-mov ax, 0x2800
-or al, [string]
+mov ax, [string]
 mov word [edi], ax
+
 ret
 
-string: db 'Hello'
+section .data
+
+string: dw 0x2841
