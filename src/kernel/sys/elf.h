@@ -42,4 +42,18 @@ typedef struct {
     elf_word entsize;
 } elf_section_t;
 
+typedef struct {
+    elf_addr offset;
+    elf_word info;
+} elf_rel_t;
+
+typedef struct {
+    elf_word name;
+    elf_addr value;
+    elf_word size;
+    unsigned char info;
+    unsigned char other;
+    elf_half shndx;
+} elf_sym_t;
+
 #endif

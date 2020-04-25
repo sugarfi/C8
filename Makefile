@@ -1,5 +1,5 @@
 .DEFAULT_GOAL = all
-.PHONY: src/user/files/bin/test
+.PHONY: src/user/files/bin/test.o
 
 CC=gcc
 LD=ld
@@ -29,8 +29,7 @@ bin/kernel.bin: $(COBJECTS) src/kernel/entry.o
 
 src/user/files/bin/test.o: src/user/files/test.c
 	@mkdir src/user/files/bin -p
-	#nasm -f elf32 -o src/user/files/bin/test.o src/user/files/test.asm
-	gcc -o src/user/files/bin/test.o $(CFLAGS) src/user/files/test.c
+	gcc -o src/user/files/bin/test.o -ffreestanding -fno-pie -m32 -c -nostdinc -nostdlib -std=c99 -O0 src/user/files/test.c
 
 clean:
 	rm bin/*.o os.img bin/*.bin files.tar src/user/files/bin/*.o -f
