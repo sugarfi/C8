@@ -1,6 +1,10 @@
 #ifndef _C8_FILE
 #define _C8_FILE
 
+#include <lib/math.h>
+
+#define FILE_SIZE(f) (oct2bin(f->size, 11))
+
 typedef struct {
     char name[100];
     char mode[8];

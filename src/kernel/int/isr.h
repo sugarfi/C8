@@ -9,7 +9,7 @@
 typedef void (*isr_t)(void); // A type for ISRs
 isr_t ISR_LIST[256];
 
-void isr_install(void);
+void isr_install(idt_entry_t* idt);
 
 int isr_handler(int ds, int old, int num);
 

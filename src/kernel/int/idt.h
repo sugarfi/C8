@@ -22,11 +22,6 @@ typedef struct
     unsigned int base;
 } __attribute__((packed)) idt_desc_t; // The IDT descriptor
 
-
-static idt_entry_t idt[256]; // The actual IDT
-static idt_desc_t idt_desc; // The descriptor
-
-
 void idt_load(idt_desc_t* table);
 
 idt_entry_t idt_make_entry(int addr, short selector, char type);

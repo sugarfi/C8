@@ -35,7 +35,7 @@ void isr_init(void) {
     ISR_LIST[31] = &isr_31;
 }
 
-void isr_install(void)
+void isr_install(idt_entry_t* idt)
 {
     /*
     Puts each of the ISRs in the IDT.
@@ -44,7 +44,7 @@ void isr_install(void)
     for (i = 0; i < 32; i++) {
         idt[i] = idt_make_entry((unsigned int) ISR_LIST[i], 0x08, 0x8e); // Set up the first 32 ISRs
     }
-    idt[128] = idt_make_entry((unsigned int) isr_128, 0x08, 0x8e); // Also add the syscall interrupt
+    idt[128] = idt_make_entry((unsigned int) &isr_128, 0x08, 0x8e); // Also add the syscall interrupt
 }
 
 int isr_handler(int ds, int old, int num)
