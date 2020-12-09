@@ -48,3 +48,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+*.img
+/bin
