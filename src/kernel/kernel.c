@@ -1,39 +1,82 @@
-#include <int/idt.h>
-#include <int/isr.h>
-#include <sys/syscall.h>
-#include <mem/pageframe.h>
-#include <lib/kstdio.h>
-#include <fs/open.h>
-#include <fs/exec.h>
-#include <lib/kstdio.h>
+#include <types.h>
+#include <info/ib.h>
+#include <info/mbr.h>
+#include <sys/systable.h>
+#include <sys/sysint.h>
+#include <mem/mem.h>
+#include <mem/page.h>
+#include <kdbg/kdbg.h>
+#include <dev/int.h>
+#include <dev/atapio.h>
+#include <mem/alloc.h>
 
 void kmain(void) {
-    static unsigned int page_dir[1024] __attribute__((aligned(4096)));
-    static unsigned int page_table[1024] __attribute__((aligned(4096)));
+    kdbg_init();
+    kdbg_info("Intialized kernel debugger");
 
-    page_fill(page_dir, 0x02);
-    page_id(page_table, 0x03);
+    mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
 
-    page_dir[0] = ((unsigned int) page_table) | 3;
-    page_dir[1023] = ((unsigned int) page_dir) | 3;
+    u32 __attribute__((aligned(4096))) pt[1024];
+    u32 __attribute__((aligned(4096))) pd[1024];
 
-    page_load_dir(page_dir);
-    page_enable();
+    kdbg_info("Identity paging the first 8 MiB");
+    u32 i;
+    for (i = 0; i < 1024; i++) {
+        pt[i] = (i << 12) | 3;
+    }
+    pd[0] = ((u32) pt) | 3;
+    pd[1] = ((u32) pt) | 3;
 
-    syscall_init();
-    pageframe_init();
+    page_enable((u32 **) &pd);
 
+    kdbg_info("Setting up interrupts");
     idt_entry_t idt[256];
-    isr_init();
-    isr_install(idt);
-    idt_desc_t idt_desc;
-    idt_desc.base = (unsigned int) &idt;
-    idt_desc.limit = 256 * sizeof(idt_entry_t) - 1;
+    idt_fill(idt);
+
+    irq_f_t sys_irq_f = &sys_irq;
+    idt_entry_t sys_irq_entry = {
+        .offset_lo = ((u32) sys_irq_f) & 0xffff,
+        .selector = 0x08,
+        .zero = 0,
+        .type = 0b10001110,
+        .offset_hi = ((u32) sys_irq_f) >> 16
+    };
+    idt[128] = sys_irq_entry;
+
+    idt_desc_t idt_desc = {
+        .size = 256 * sizeof(idt_entry_t) - 1,
+        .ptr = (u32) &idt
+    };
     idt_load(&idt_desc);
 
-    file_t* test;
-    file_open("bin/test.o", &test);
-    file_exec(test, page_table);
 
-    return;
+    kdbg_info("Filling system call table with invalid entries");
+    systable_entry_t systable[1024];
+    systable_entry_t sys_nop = {
+        .func = NULL,
+        .flags = 0
+    };
+    for (i = 0; i < 1024; i++) {
+        systable[i] = sys_nop;
+    }
+    
+    ib_t ib = {
+        .mbr = (u32) mbr,
+        .pd = (u32) pd,
+        .idt = (u32) idt,
+        .systable = (u32) systable,
+        .res = 0,
+    };
+
+    kdbg_info("Writing information block to address 0x000003ff");
+    mem_cpy((char *) 0x3ff, (char *) &ib, sizeof(ib_t));
+
+    kdbg_info("Reading second partition on disk (modules) to memory");
+    char *buf = (char *) alloc_alloc_page();
+    atapio_read(mbr->part2.start_lba, mbr->part2.count_lba, buf);
+    kdbg_info(buf);
+
+    kdbg_info("Finished, hanging");    
+
+    for (;;);
 }

@@ -1,93 +1,100 @@
 [org 0x7c00]
 [bits 16]
 
-boot:
+mov si, mbr
+mov cx, 4
 
-    mov cx, 11 ; The number of 128-sector groups to read
+.find_active:
+lodsb
+test al, 0x80
+jnz .found_active
+add si, 15
 
-    read_loop:
-        mov ah, 0x42 ; 0x42 is extended read
-        mov si, dap ; Load our DAP
-        int 0x13 ; Read the disk
+dec cx
+jnz .find_active
 
-        add word [dap.start], 0x80 ; Go to the next group
-        add word [dap.segment], 0x1000 ; Increment the segment
+jmp .no_active
 
-        dec cx ; Decrement the count
-        jnz read_loop ; Loop until it is 0
+.found_active:
+dec si
+add si, 8
+mov cx, 4
+mov di, dap.dap_lba_start
+rep movsb
+mov cx, 2
+mov di, dap.dap_lba_count
+movsb
+movsb
+mov ah, 0x42
+mov si, dap
+int 0x13
 
-    mov ah, 0x00 ; Switch video mode
-    mov al, 0x03 ; 0x03 is 80x25 test mode with colors
-    int 0x10
+mov ah, 0x00
+mov al, 0x03
+int 0x10
 
-    cli ; Disable interrupts
+jmp 0x7e00
 
-    in al, 0x92
-    or al, 2
-    out 0x92, al ; Fast A20 enable, non-boomer machines will support this
+.no_active:
+mov si, no_active_msg
+mov ah, 0x0e
+.print_msg:
+lodsb
+int 0x10
+or al, al
+jnz .print_msg
 
-    lgdt [gdt_desc] ; Load our GDT
+cli
+hlt
 
-    mov eax, cr0
-    or al, 1 ; Set the PE bit of cr0
-    mov cr0, eax
-
-    jmp 0x08:main ; Go to protected mode main
-
-    cli ; Halt
-    hlt ; We never get here anyway, so you could put whatever here
-
-main:
-    [bits 32] ; We are not in protected mode!
-
-    mov ax, 0x10 ; Initialize the segments
-    mov ds, ax
-    mov es, ax
-    mov ss, ax
-    mov fs, ax
-    mov gs, ax
-
-    mov ebp, 0x90000 ; Set up a stack
-    mov esp, ebp
-
-    call 0x10000 ; The kernel is at 0x10000
-
-    jmp $ ; Hang
-    ; We will never get here either, without some sort of segfault or something
+no_active_msg: db 'No active partition found', 0
 
 dap:
-    db 0x10 ; Size of DAP in bytes
-    db 0x00 ; Unused
-    .count:
-        dw 0x0080 ; Number of sectors to read
-    .offset:
-        dw 0x0000 ; Offset to read to
-    .segment:
-        dw 0x1000 ; Segment to read to
-    .start:
-        dq 0x00000001 ; Starting LBA to read from
+db 0x10
+db 0x00
+.dap_lba_count:
+dw 0
+dw 0
+dw 0x07e0
+.dap_lba_start:
+dq 0
 
-gdt_start:
-    dd 0x00 ; Null descriptor
-    dd 0x00
-gdt_code:
-    dw 0xffff ; Limit 0-15
-    dw 0x0000 ; Base 0-15
-    db 0x00 ; Base 16-23
-    db 0x9a ; Type
-    db 0xcf ; Flags and Limit 16-19
-    db 0x00 ; Base 24-31
-gdt_data:
-    dw 0xffff ; Limit 0-15
-    dw 0x0000 ; Base 0-15
-    db 0x00 ; Base 16-23
-    db 0x92 ; Type
-    db 0xcf ; Flags and Limit 16-19
-    db 0x00 ; Base 24-31
-gdt_end:
-gdt_desc:
-    dw gdt_end - gdt_start - 1 ; Size - 1
-    dd gdt_start ; Offset
+times 440-($-$$) db 0
+dd 0xc8c8c8c8
+dw 0
 
-times 510-($-$$) db 0 ; Pad to 512 bytes
+mbr:
+; MBR entry #1
+db 0x80 ; Active
+db 0
+dw 0
+db 0xc8 ; The C8 kernel
+db 0
+dw 0
+dd 1
+dd 16 ; 8 KiB
+; MBR entry #2
+db 0x00 ; Not active
+db 0
+dw 0
+db 0x04 ; FAT16
+db 0
+dw 0
+dd 16
+dd 16 ; 8 KiB
+; MBR entry #3
+db 0x00 ; Not active
+db 0
+dw 0
+db 0x83 ; Linux (ext2)
+db 0
+dw 0
+dd 32
+dd 16 ; 8 KiB
+; MBR entry #4 (unused)
+times 16 db 0
+
+times 510-($-$$) db 0
 dw 0xaa55 ; Boot signature
+
+%include "src/boot/pmode.asm"
