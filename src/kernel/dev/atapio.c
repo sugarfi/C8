@@ -1,5 +1,4 @@
 #include <dev/atapio.h>
-#include <kdbg/kdbg.h>
 
 void atapio_wait(void) {
     port_inb(ATAPIO_BUS + 12);
@@ -20,6 +19,13 @@ void atapio_read(u32 lba, u8 count, char *buf) {
     port_outb((lba >> 8) & 0xff, ATAPIO_BUS + 4);
     port_outb((lba >> 16) & 0xff, ATAPIO_BUS + 5);
     port_outb(0x20, ATAPIO_BUS + 7);
+
+    char msg[2];
+    msg[0] = count + '0';
+    msg[1] = 0;
+    kdbg_info(msg);
+    msg[0] = lba + '0';
+    kdbg_info(msg);
 
     for (i = pos = 0; i < count; i++) {
         atapio_wait();

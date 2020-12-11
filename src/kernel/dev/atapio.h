@@ -3,6 +3,7 @@
 
 #include <dev/port.h>
 #include <types.h>
+#include <kdbg/kdbg.h>
 
 #define ATAPIO_BUS 0x1f0
 
