@@ -72,23 +72,27 @@ void kmain(void) {
     kdbg_info("Writing information block to address 0x000003ff");
     mem_cpy((char *) 0x3ff, (char *) &ib, sizeof(ib_t));
 
-    kdbg_info("Reading second partition on disk (modules) to memory");
+    kdbg_info("Reading BPB of second partition to memory");
     char *buf = (char *) alloc_alloc_page();
     atapio_read(mbr->part2.start_lba, 1, buf);
 
     fat16_bpb_t *bpb = (fat16_bpb_t *) buf;
 
+    /*
+    kdbg_info("Reading root directory of second partition to memory");
     char *root_buf = (char *) alloc_alloc_page();
-    atapio_read(mbr->part2.start_lba + bpb->reserved + (bpb->sectors_per_fat * bpb->number_of_fats), bpb->root_dir_entries * 32 / 512, root_buf); // should work if the drive is formatted correctly - i probably shouldn't leave it up to the user to fix their drive, but hey. whatever works
+    atapio_read(25, 1, root_buf);//mbr->part2.start_lba + bpb->reserved + (bpb->sectors_per_fat * bpb->number_of_fats), 1, root_buf); // should work if the drive is formatted correctly - i probably shouldn't leave it up to the user to fix their drive, but hey. whatever works
     // although i suppose it doesn't really work - this allows arbitrary memory access if the root directory entries is set to anything over 8 sectors, ie. over 128
     // idk will do smth about it later
     // maybe add an ASSERT macro that does a simple conditional check + a call to death() or fatal()?
 
+    kdbg_info(root_buf);
     fat16_83_entry_t *root = (fat16_83_entry_t *) root_buf;
     fat16_83_entry_t entry;
-    for (i = 0, entry = root[i]; (i < 128) && (entry.name[0] != 0); entry = root[i++]) {
-        kdbg_info(entry.name);
+    for (i = 0, entry = root[i]; (i < 128) && (entry.name[0] != 0); entry = root[++i]) {
+        kdbg_info((char *) &entry);
     }
+    */
 
     kdbg_info("Finished, hanging"); // Prob a better way to do this, even just a return could work ok
 
