@@ -11,6 +11,7 @@
 #include <mem/alloc.h>
 #include <dev/vga.h>
 #include <fs/tar.h>
+#include <sys/syscall.h>
 
 void kmain(void) {
     kdbg_init();
@@ -62,6 +63,14 @@ void kmain(void) {
         systable[i] = sys_nop;
     }
     
+    kdbg_info("Writing actual syscalls");
+    // Any real syscalls go here
+    systable_entry_t sys_read = {
+        .func = &syscall_read,
+        .flags = 1 // Present
+    };
+    systable[0] = sys_read;
+
     ib_t ib = { // Create the information block with all relevant things and copy it to memory.
         .mbr = (u32) mbr,
         .pd = (u32) pd,
@@ -79,7 +88,9 @@ void kmain(void) {
 
     kdbg_info("Reading and printing motd.txt");
     char motd[512];
-    if (!tar_read("motd.txt", mbr->part2.start_lba + 1, motd)) { // Ideally this can later be done with an fread function or something
+    char *filename = "motd.txt";
+    __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename), "D" ((u32) motd));
+    if (!IB_RES) {
         vga_put("Error reading file motd.txt, please ensure it exists.", 0x07);
     } else {
         vga_put(motd, 0x07);

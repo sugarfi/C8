@@ -22,7 +22,7 @@ __attribute__((interrupt)) void sys_irq(void* frame) {
     systable_entry_t *systable = (systable_entry_t *) ib->systable;
     systable_entry_t call = systable[eax]; // We want to extract the correct syscall to invoke
 
-    if (1 == 0) {
+    if (!(call.flags & 1)) {
         kdbg_error("Syscall not present"); // We will error if we the syscall doesn't exist, and return -1
         ib->res = -1;
         return;
