@@ -1,53 +1,66 @@
 #include <dev/atapio.h>
 
+void insw(u16 port, u16 *dest, u32 count) {
+    // Many thanks to this SO post: https://stackoverflow.com/questions/64945691/how-to-use-ins-instruction-with-gnu-assembler
+    __asm__ volatile("rep ins%z2" : "+D" (dest), "+c" (count), "=m" (*dest) : "d" (port) : "memory"); // Invoke the rep insw instruction
+}
+
 void atapio_wait(void) {
-    port_inb(ATAPIO_BUS + 12);
-    port_inb(ATAPIO_BUS + 12);
-    port_inb(ATAPIO_BUS + 12);
-    port_inb(ATAPIO_BUS + 12);
+    /*
+     * Some ATAPIO operations require a 500 nanosecond delay to allow the drive time to process; the delay created by
+     * 5 inb operations is about enough to provide this.
+     */
+    port_inb(ATAPIO_BUS + 7);
+    port_inb(ATAPIO_BUS + 7);
+    port_inb(ATAPIO_BUS + 7);
+    port_inb(ATAPIO_BUS + 7);
+    port_inb(ATAPIO_BUS + 7);
 }
 
 void atapio_poll(void) {
-    atapio_wait();
+    /*
+     * After sending a read command and reading one sector (and later, a write command), we have to poll the device in a loop,
+     * checking if there were any errors in the operation and halting if so, and then when the drive is ready exiting the loop.
+     */
     u8 status;
-retry: 
-    status = port_inb(ATAPIO_BUS + 7);
-    if (status & 128) goto retry;
-retry2: 
-    status = port_inb(ATAPIO_BUS + 7);
-    if(status & 1) {
-        kdbg_error("ERR bit set in PATA status, halting");
+
+    while (true) {
+        status = port_inb(ATAPIO_BUS + 7); // ATAPIO_BUS + 7 is the ATAPIO status register
+        if (!(status & 128) && (status & 8)) { // status & 128 is the BSY bit and status & 8 is DRQ, so when BSY is 0 and DRQ is 1
+                                               // we can exit the loop.
+            break;
+        }
+    }
+    if ((status & 32) || (status & 1)) {
+        kdbg_death("ERR bit set in PATA status, cannot continue disk operation");
         for(;;);
     }
-    if(!(status & 8)) goto retry2;
-}   
-
-void atapio_read_one(u32 lba, char *buf) {
-    port_outb(0xe0 | ((lba >> 24) & 0x0f), ATAPIO_BUS + 6);
-    port_outb(0, ATAPIO_BUS + 1);
-    port_outb(1, ATAPIO_BUS + 2);
-    port_outb(lba & 0xff, ATAPIO_BUS + 3);
-    port_outb((lba >> 8) & 0xff, ATAPIO_BUS + 4);
-    port_outb((lba >> 16) & 0xff, ATAPIO_BUS + 5);
-    port_outb(0x20, ATAPIO_BUS + 7);
-
-    atapio_poll();
-    u16 val;
-    u8 i;
-    for (i = 0; i < 256; i++) {
-        val = port_inw(ATAPIO_BUS);
-        *((u16 *)(buf + i * 2)) = val;
-    }
-    atapio_wait();
 }
 
-void atapio_read(u32 lba, u8 count, char* buf) {
-    //__asm__ volatile ("cli");
+void atapio_setup(void) {
+    port_outb(0b01000000, 0x3f6); // I forget why I wrote this but we probably don't need it
+}
 
-    u32 i;
-    for (i = 0; i < count; ++i, buf += 512) {
-        atapio_read_one(lba + i, buf);
+void atapio_read(u32 lba, u8 count, char *buf) {
+    while (port_inb(ATAPIO_BUS + 7) & 128); // '^^ Again, no idea what this is for
+    port_outb(0xe0 | ((lba >> 24) & 0x0f), ATAPIO_BUS + 6); // We output 0xe0 for the master drive, and the top few bits of the LBA
+                                                            // value to ATAPIO_BUS + 6, the drive select register
+    //port_outb(0, ATAPIO_BUS + 1);
+    port_outb(count, ATAPIO_BUS + 2); // We output the count to ATAPIO_BUS + 2, the sector count register
+    port_outb((u8) lba, ATAPIO_BUS + 3); // We output the low 8 bits of the LBA to the first LBA register
+    port_outb((u8) (lba >> 8), ATAPIO_BUS + 4); // Second 8 to the second LBA register
+    port_outb((u8) (lba >> 16), ATAPIO_BUS + 5); // Third 8 to the third LBA register
+    port_outb(0x20, ATAPIO_BUS + 7); // We output 0x20, the read command to ATAPIO_BUS + 7, the command register
+
+    u16 val;
+    u8 i, j;
+
+    u16 *target = (u16 *) buf;
+
+    for (i = 0; i < count; ++i) {   
+        atapio_poll(); // Wait for the drive to be ready
+        insw(ATAPIO_BUS, target, 256); // Read 256 16-bit values into the buffer
+        target += 256; // Increment
     }
-
-    //__asm__ volatile ("sti");
+    atapio_wait(); // Small delay
 }

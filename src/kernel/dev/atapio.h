@@ -7,7 +7,7 @@
 
 #define ATAPIO_BUS 0x1f0
 
-void atapio_wait(void);
+void atapio_setup(void);
 void atapio_read(u32, u8, char *);
 
 #endif

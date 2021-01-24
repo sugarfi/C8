@@ -4,4 +4,6 @@
 *.lib
 *.a
 *.img
+*.tar
+*.swp
 /bin

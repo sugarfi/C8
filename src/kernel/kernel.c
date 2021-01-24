@@ -9,18 +9,19 @@
 #include <dev/int.h>
 #include <dev/atapio.h>
 #include <mem/alloc.h>
-#include <mod/fat16.h>
+#include <dev/vga.h>
+#include <fs/tar.h>
 
 void kmain(void) {
     kdbg_init();
-    kdbg_info("Intialized kernel debugger");
+    kdbg_info("Intialized kernel debugger"); // Initialize kdbg and print a message
 
     mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
 
     u32 __attribute__((aligned(4096))) pt[1024];
     u32 __attribute__((aligned(4096))) pd[1024];
 
-    kdbg_info("Identity paging the first 8 MiB");
+    kdbg_info("Identity paging the first 8 MiB"); // Identity page 8 MiB of memory
     u32 i;
     for (i = 0; i < 1024; i++) {
         pt[i] = (i << 12) | 3;
@@ -28,14 +29,14 @@ void kmain(void) {
     pd[0] = ((u32) pt) | 3;
     pd[1] = ((u32) pt) | 3;
 
-    page_enable((u32 **) &pd);
+    page_enable((u32 **) &pd); // Enable paging
 
     kdbg_info("Setting up interrupts");
     idt_entry_t idt[256];
-    idt_fill(idt);
+    idt_fill(idt); // Set up an IDT and fill it with ISRs
 
     irq_f_t sys_irq_f = &sys_irq;
-    idt_entry_t sys_irq_entry = {
+    idt_entry_t sys_irq_entry = { // Add the syscall IRQ as entry 128 in the IDT.
         .offset_lo = ((u32) sys_irq_f) & 0xffff,
         .selector = 0x08,
         .zero = 0,
@@ -44,14 +45,14 @@ void kmain(void) {
     };
     idt[128] = sys_irq_entry;
 
-    idt_desc_t idt_desc = {
+    idt_desc_t idt_desc = { // Create the IDT descriptor and load it.
         .size = 256 * sizeof(idt_entry_t) - 1,
         .ptr = (u32) &idt
     };
     idt_load(&idt_desc);
 
 
-    kdbg_info("Filling system call table with invalid entries");
+    kdbg_info("Filling system call table with invalid entries"); // We want the whole syscall table to be filled with invalid entries
     systable_entry_t systable[1024];
     systable_entry_t sys_nop = {
         .func = NULL,
@@ -61,7 +62,7 @@ void kmain(void) {
         systable[i] = sys_nop;
     }
     
-    ib_t ib = {
+    ib_t ib = { // Create the information block with all relevant things and copy it to memory.
         .mbr = (u32) mbr,
         .pd = (u32) pd,
         .idt = (u32) idt,
@@ -70,29 +71,19 @@ void kmain(void) {
     };
 
     kdbg_info("Writing information block to address 0x000003ff");
+
     mem_cpy((char *) 0x3ff, (char *) &ib, sizeof(ib_t));
 
-    kdbg_info("Reading BPB of second partition to memory");
-    char *buf = (char *) alloc_alloc_page();
-    atapio_read(mbr->part2.start_lba, 1, buf);
+    kdbg_info("Initializing ATAPIO driver");
+    atapio_setup(); // Might not be necessary but whatever :/
 
-    fat16_bpb_t *bpb = (fat16_bpb_t *) buf;
-
-    /*
-    kdbg_info("Reading root directory of second partition to memory");
-    char *root_buf = (char *) alloc_alloc_page();
-    atapio_read(25, 1, root_buf);//mbr->part2.start_lba + bpb->reserved + (bpb->sectors_per_fat * bpb->number_of_fats), 1, root_buf); // should work if the drive is formatted correctly - i probably shouldn't leave it up to the user to fix their drive, but hey. whatever works
-    // although i suppose it doesn't really work - this allows arbitrary memory access if the root directory entries is set to anything over 8 sectors, ie. over 128
-    // idk will do smth about it later
-    // maybe add an ASSERT macro that does a simple conditional check + a call to death() or fatal()?
-
-    kdbg_info(root_buf);
-    fat16_83_entry_t *root = (fat16_83_entry_t *) root_buf;
-    fat16_83_entry_t entry;
-    for (i = 0, entry = root[i]; (i < 128) && (entry.name[0] != 0); entry = root[++i]) {
-        kdbg_info((char *) &entry);
+    kdbg_info("Reading and printing motd.txt");
+    char motd[512];
+    if (!tar_read("motd.txt", mbr->part2.start_lba + 1, motd)) { // Ideally this can later be done with an fread function or something
+        vga_put("Error reading file motd.txt, please ensure it exists.", 0x07);
+    } else {
+        vga_put(motd, 0x07);
     }
-    */
 
     kdbg_info("Finished, hanging"); // Prob a better way to do this, even just a return could work ok
 

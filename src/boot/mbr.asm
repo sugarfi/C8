@@ -20,14 +20,7 @@ db 0
 dw 0
 dd 16
 dd 16384 ; 8 KiB
-; MBR entry #3
-db 0x00 ; Not active
-db 0
-dw 0
-db 0x83 ; Linux (ext2)
-db 0
-dw 0
-dd 16399 
-dd 16384 ; 8 KiB
+; MBR entry #3 (unused)
+times 16 db 0
 ; MBR entry #4 (unused)
 times 16 db 0

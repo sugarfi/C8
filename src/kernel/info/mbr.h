@@ -2,6 +2,9 @@
 #define _C8_MBR
 #include <types.h>
 
+/*
+ * A struct representing a single partition in the MBR. See here for details: https://wiki.osdev.org/MBR_(x86)
+ */
 typedef struct __attribute__((packed)) {
     u8 active;
     u8 start_h;
@@ -13,6 +16,9 @@ typedef struct __attribute__((packed)) {
     u32 count_lba;
 } mbr_entry_t;
 
+/*
+ * This struct represents the full MBR. 
+ */
 typedef struct __attribute__((packed)) {
     u32 sig;
     u16 zero;

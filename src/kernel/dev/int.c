@@ -1,5 +1,6 @@
 #include <dev/int.h>
 
+// Generate an ISR handler
 #define MAKE_ISR(N) \
     __attribute__((interrupt)) void isr_##N(void* frame, u32 code) {\
         kdbg_error("Recieved ISR " #N);\
@@ -7,6 +8,7 @@
         for(;;);\
     }
 
+// Stores an ISR handler in the IDT
 #define STORE_ISR(N) \
     isr_f_t isr_f_##N = &isr_##N; \
     idt_entry_t isr_entry_##N = { \
@@ -52,6 +54,9 @@ MAKE_ISR(30)
 MAKE_ISR(31)
 
 void idt_load(idt_desc_t *desc) {
+    /*
+     * Uses assembly to load the IDT.
+     */
     __asm__ volatile(
         "lidt (%0)\n"
         : : "r" (desc)
@@ -59,6 +64,9 @@ void idt_load(idt_desc_t *desc) {
 }
 
 void idt_fill(idt_entry_t idt[256]) {
+    /*
+     * Fills the IDT with the generated ISRs.
+     */
     STORE_ISR(0)
     STORE_ISR(1)
     STORE_ISR(2)
