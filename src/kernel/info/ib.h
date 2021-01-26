@@ -14,6 +14,7 @@ typedef struct __attribute__((packed)) {
     u32 pd;
     u32 idt;
     u32 systable;
+    u32 root;
     u32 res;
     u32 allocated[32];
 } ib_t;

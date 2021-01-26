@@ -39,6 +39,6 @@ all: bin/boot.bin bin/kernel.bin
 	@echo "Write kernel.bin to os.img"
 	@dd if=bin/kernel.bin of=os.img conv=notrunc seek=2
 	@echo "Generate files.tar"
-	@tar -C files -f files.tar -c $$(ls files/)
+	@tar -cf files.tar files
 	@echo "Write files.tar to os.img"
-	@dd if=files.tar of=os.img conv=notrunc seek=17
+	@dd if=files.tar of=os.img conv=notrunc seek=65

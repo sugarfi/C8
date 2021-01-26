@@ -2,7 +2,7 @@
 #define _C8_SYSCALL
 
 #include <types.h>
-#include <fs/tar.h>
+#include <fs/vfs.h>
 #include <info/ib.h>
 #include <info/mbr.h>
 

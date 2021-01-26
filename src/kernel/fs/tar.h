@@ -25,6 +25,10 @@ typedef struct __attribute__((packed)) {
     char prefix[155];
 } tar_file_t;
 
+u32 oct2bin(char *, u32);
+tar_file_t *tar_get_file(char *, u32);
 bool tar_read(char *, u32, char *);
+bool tar_read_dir(char *, u32, char **);
+u32 tar_count(char *, u32);
 
 #endif

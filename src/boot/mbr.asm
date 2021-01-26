@@ -10,7 +10,7 @@ db 0xc8 ; The C8 kernel
 db 0
 dw 0
 dd 1
-dd 16 ; 8 KiB
+dd 64 ; 32 KiB
 ; MBR entry #2
 db 0x00 ; Not active
 db 0
@@ -18,7 +18,7 @@ dw 0
 db 0x04 ; FAT16
 db 0
 dw 0
-dd 16
+dd 64
 dd 16384 ; 8 KiB
 ; MBR entry #3 (unused)
 times 16 db 0

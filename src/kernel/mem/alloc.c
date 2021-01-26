@@ -18,12 +18,12 @@ void *alloc_alloc_page(void) {
     for (i = 0; i < 32; i++) {
         for (j = 0; j < 32; j++) { // We iterate over all the 1024 possible pages.
             /*
-             * ib->allocated is a bitarray, which 32 u32s in it. Each bit represents
+             * ib->allocated is a bitarray, with 32 u32s in it. Each bit represents
              * a single page.
              */
             if ((ib->allocated[i] & (1 << j)) == 0) { // Check for a freed page
                 ib->allocated[i] |= (1 << j); // If it is freed, we mark it as used
-                u8 *ptr = (u8 *) (((i * 32) + j + 1024) << 12); // Get its address
+                u8 *ptr = (u8 *) (((i * 32) + j + 1024) << 12) + (1024 << 12); // Get its address
                 return (void *) ptr;
             }
         }
@@ -52,12 +52,11 @@ void *alloc_alloc(u32 size) {
      * Given a size, finds or creates a block of the appropriate size and returns it.
      */
     alloc_lock = true; // We want to lock page allocations here to ensure any allocated pages are contiguous
-    
-    u32 i = alloc_base; // Starting from the base allocation address *every time* is ridiculously inefficient for the record
+
+    u32 i = alloc_base + ((allocated - 1) << 12); // Starting from the base allocation address *every time* is ridiculously inefficient for the record
     alloc_header_t *header = (alloc_header_t *) i;
     for (; i - alloc_base < (allocated << 12); i += header->size + sizeof(alloc_header_t), header = (alloc_header_t *) i) { // Might be done better with *i* as the alloc_header_t *?
-        // Also note that because of the ;; this will hang forever/crash if no free block is found
-        if (header->size >= size & (header->flags & 1)) { // flags & 1 is the free bit
+        if (header->size >= size && (header->flags & 1)) { // flags & 1 is the free bit
             header->flags &= ~1;
             u32 addr = i - alloc_base;
             while (addr > (allocated << 12)) {

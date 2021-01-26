@@ -10,7 +10,6 @@
 #include <dev/atapio.h>
 #include <mem/alloc.h>
 #include <dev/vga.h>
-#include <fs/tar.h>
 #include <sys/syscall.h>
 
 void kmain(void) {
@@ -29,8 +28,13 @@ void kmain(void) {
     }
     pd[0] = ((u32) pt) | 3;
     pd[1] = ((u32) pt) | 3;
+    pd[2] = ((u32) pt) | 3;
+    pd[3] = ((u32) pt) | 3;
 
     page_enable((u32 **) &pd); // Enable paging
+
+    kdbg_info("Initializing allocator");
+    alloc_base = (u32) alloc_alloc_page();
 
     kdbg_info("Setting up interrupts");
     idt_entry_t idt[256];
@@ -52,7 +56,6 @@ void kmain(void) {
     };
     idt_load(&idt_desc);
 
-
     kdbg_info("Filling system call table with invalid entries"); // We want the whole syscall table to be filled with invalid entries
     systable_entry_t systable[1024];
     systable_entry_t sys_nop = {
@@ -71,24 +74,30 @@ void kmain(void) {
     };
     systable[0] = sys_read;
 
+    kdbg_info("Populating VFS root");
+    vfs_dir_t *root = vfs_make_dir("files");
+    vfs_populate(root);
+    kdbg_info(root->first_file->name);
+    
     ib_t ib = { // Create the information block with all relevant things and copy it to memory.
         .mbr = (u32) mbr,
         .pd = (u32) pd,
         .idt = (u32) idt,
         .systable = (u32) systable,
-        .res = 0,
+        .root = (u32) root,
+        .res = 0
     };
 
     kdbg_info("Writing information block to address 0x000003ff");
-
+    kdbg_info(root->first_file->name);
     mem_cpy((char *) 0x3ff, (char *) &ib, sizeof(ib_t));
 
     kdbg_info("Initializing ATAPIO driver");
     atapio_setup(); // Might not be necessary but whatever :/
 
     kdbg_info("Reading and printing motd.txt");
-    char motd[512];
-    char *filename = "motd.txt";
+    char *motd = alloc_alloc(512);
+    char *filename = "files/motd.txt";
     __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename), "D" ((u32) motd));
     if (!IB_RES) {
         vga_put("Error reading file motd.txt, please ensure it exists.", 0x07);

@@ -8,6 +8,7 @@ void mem_cpy(char *a, char *b, u32 n) {
     for (i = 0; i < n; ++i) {
         a[i] = b[i];
     }
+    //a[n] = 0;
 }
 
 bool mem_cmp(char *a, char *b, u32 n) {
@@ -30,4 +31,14 @@ u32 mem_len(char *s) {
     u32 i = 0;
     while (s[i++]);
     return i;
+}
+
+void mem_cat(char *a, char *b) {
+    /*
+     * Concatenate two strings.
+     */
+    u32 i;
+    for (i = 0; i < mem_len(b); ++i) {
+        a[i + mem_len(a)] = b[i];
+    }
 }
