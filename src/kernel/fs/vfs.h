@@ -34,5 +34,6 @@ void vfs_flush(vfs_dir_t *);
 void vfs_free(vfs_dir_t *);
 void vfs_add_file(vfs_file_t *, vfs_dir_t *);
 vfs_dir_t *vfs_make_dir(char *);
+vfs_file_t *vfs_make_file(char *);
 
 #endif

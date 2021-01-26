@@ -4,7 +4,7 @@ __attribute__((interrupt)) void sys_irq(void* frame) {
     /*
      * This function is invoked whenever a syscall happens, ie. int 0x80.
      */
-    ib_t *ib = (ib_t *) 0x3ff; // Get the information block
+    ib_t *ib = (ib_t *) 0x500; // Get the information block
 
     register u32 eax __asm__("eax"); // Get all the registers, to pass to the handler.
     register u32 ebx __asm__("ebx");

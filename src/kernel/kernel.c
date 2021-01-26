@@ -68,16 +68,25 @@ void kmain(void) {
     
     kdbg_info("Writing actual syscalls");
     // Any real syscalls go here
+    systable_entry_t sys_open = {
+        .func = &syscall_open,
+        .flags = 1 // Present
+    };
+    systable[0] = sys_open;
     systable_entry_t sys_read = {
         .func = &syscall_read,
         .flags = 1 // Present
     };
-    systable[0] = sys_read;
+    systable[1] = sys_read;
+    systable_entry_t sys_write = {
+        .func = &syscall_write,
+        .flags = 1 // Present
+    };
+    systable[2] = sys_write;
 
     kdbg_info("Populating VFS root");
     vfs_dir_t *root = vfs_make_dir("files");
     vfs_populate(root);
-    kdbg_info(root->first_file->name);
     
     ib_t ib = { // Create the information block with all relevant things and copy it to memory.
         .mbr = (u32) mbr,
@@ -85,12 +94,12 @@ void kmain(void) {
         .idt = (u32) idt,
         .systable = (u32) systable,
         .root = (u32) root,
+        .next_fd = 1,
         .res = 0
     };
 
-    kdbg_info("Writing information block to address 0x000003ff");
-    kdbg_info(root->first_file->name);
-    mem_cpy((char *) 0x3ff, (char *) &ib, sizeof(ib_t));
+    kdbg_info("Writing information block to address 0x00000500");
+    mem_cpy((char *) 0x500, (char *) &ib, sizeof(ib_t));
 
     kdbg_info("Initializing ATAPIO driver");
     atapio_setup(); // Might not be necessary but whatever :/
@@ -98,10 +107,13 @@ void kmain(void) {
     kdbg_info("Reading and printing motd.txt");
     char *motd = alloc_alloc(512);
     char *filename = "files/motd.txt";
-    __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename), "D" ((u32) motd));
-    if (!IB_RES) {
-        vga_put("Error reading file motd.txt, please ensure it exists.", 0x07);
+    char *buf = "Hello, world!";
+    __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename));
+    u32 fd = IB_RES;
+    if (fd != 1) {
+        kdbg_error("Could not open motd.txt.");
     } else {
+        __asm__ volatile ("int $0x80" : : "a" (1), "S" (fd), "D" ((u32) motd));
         vga_put(motd, 0x07);
     }
 

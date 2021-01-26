@@ -6,6 +6,8 @@
 #include <info/ib.h>
 #include <info/mbr.h>
 
+u32 syscall_open(u32, u32, u32, u32, u32, u32);
 u32 syscall_read(u32, u32, u32, u32, u32, u32);
+u32 syscall_write(u32, u32, u32, u32, u32, u32);
 
 #endif

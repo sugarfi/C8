@@ -11,7 +11,7 @@ void *alloc_alloc_page(void) {
     /*
      * Allocates a single page and returns its address.
      */
-    ib_t *ib = (ib_t *) 0x3ff; 
+    ib_t *ib = (ib_t *) 0x500; 
     while (alloc_lock); // A simple locking mechanism in case we ever need to prevent access to the page bitmap
 
     u32 i, j;
@@ -37,7 +37,7 @@ void alloc_free_page(void *ptr) {
     /*
      * Frees a page, assuming it is already allocated.
      */
-    ib_t *ib = (ib_t *) 0x3ff;
+    ib_t *ib = (ib_t *) 0x500;
 
     u32 addr = (u32) ptr; // Get the address from the pointer
     addr >> 12;

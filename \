@@ -11,7 +11,7 @@ bool vfs_internal_read(vfs_file_t *file) {
     if (ifile == NULL) {
         return false;
     }
-    u32 size = oct2bin(ifile->size, 11);
+    u32 size = oct2bin(ifile->size, 12);
     file->content = alloc_alloc(size);
     file->size = size;
     char *buf = alloc_alloc(size + 512); // Quick and dirty round up
@@ -41,7 +41,7 @@ bool vfs_write(char *data, vfs_file_t *file, u32 size) {
     if (file->size != 0) {
         alloc_free(file->content);
     }
-    file->content = alloc_alloc(size + 1);
+    file->content = alloc_alloc(size);
     file->size = size;
     mem_cpy(file->content, data, size);
     file->content[size] = 0;
@@ -102,6 +102,7 @@ void vfs_populate(vfs_dir_t *dir) {
     mem_cpy(path2, path, mem_len(path));
     path2[mem_len(path) - 1] = '/';
     path2[mem_len(path)] = 0;
+    kdbg_info(path2);
     path = alloc_alloc(mem_len(path2));
     mem_cpy(path, path2, mem_len(path2));
     alloc_free(path2);
