@@ -18,18 +18,30 @@ void kmain(void) {
 
     mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
 
-    u32 __attribute__((aligned(4096))) pt[1024];
+    u32 __attribute__((aligned(4096))) pt0[1024], pt1[124], pt2[1024], pt3[1024];
     u32 __attribute__((aligned(4096))) pd[1024];
 
     kdbg_info("Identity paging the first 8 MiB"); // Identity page 8 MiB of memory
     u32 i;
     for (i = 0; i < 1024; i++) {
-        pt[i] = (i << 12) | 3;
+        pt0[i] = (i << 12) | 3;
     }
-    pd[0] = ((u32) pt) | 3;
-    pd[1] = ((u32) pt) | 3;
-    pd[2] = ((u32) pt) | 3;
-    pd[3] = ((u32) pt) | 3;
+    pd[0] = ((u32) pt0) | 3;
+
+    for (i = 0; i < 1024; i++) {
+        pt1[i] = (i << 12) | 3 + (1024 << 12) * 1;
+    }
+    pd[1] = ((u32) pt1) | 3;
+
+    for (i = 0; i < 1024; i++) {
+        pt2[i] = (i << 12) | 3 + (1024 << 12) * 2;
+    }
+    pd[2] = ((u32) pt2) | 3;
+
+    for (i = 0; i < 1024; i++) {
+        pt3[i] = (i << 12) | 3 + (1024 << 12) * 3;
+    }
+    pd[3] = ((u32) pt3) | 3;
 
     page_enable((u32 **) &pd); // Enable paging
 
@@ -109,11 +121,9 @@ void kmain(void) {
     char *motd = alloc_alloc(512);
     char *filename = "files/motd.txt";
     char *buf = "Hello, world!";
-    atapio_write(0, 1, buf);
-    for(;;);
     __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename));
     u32 fd = IB_RES;
-    if (fd == 0) { // 1 = false = failure
+    if (fd == 0) { // 0 = false = failure
         kdbg_error("Could not open motd.txt.");
     } else {
         __asm__ volatile ("int $0x80" : : "a" (2), "D" (fd), "S" ((u32) buf), "c" (mem_len(buf)));

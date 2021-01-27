@@ -19,10 +19,9 @@ void bin2oct(char *buf, u32 n, u32 size) {
      * Converts a binary string to octal.
      */
     u32 i;
-    u32 scale = 1;
-    for (i = 0; i < size; ++i, scale *= 8, n /= 8) {
+    for (i = 0; i < size; ++i, n /= 8) {
         char digit = (n % 8) + '0';
-        buf[size - i - 1] = n;
+        buf[size - i - 1] = digit;
     }
 }
 
@@ -60,23 +59,30 @@ bool tar_write(char *name, char *data, u32 size, u32 sector) {
         if (!(mem_cmp(file->ustar, "ustar", 5))) {
             return false;
         }
+        u32 fsize = (oct2bin(file->size, 12) + 256) / 512;
         if (mem_cmp(file->name, name, mem_len(file->name))) {
             if (file->type == '1' || file->type == '2') {
                 return tar_write(file->linked, data, size, sector);
             } else if (file->type == '5') {
                 return false;
             }
+            u32 ssize2 = (file->size / 512) + 1;
             bin2oct(file->size, size, 12);
-            kdbg_info(file->size);
             u32 i;
             ++sector;
-            for (i = 0; i < size; i++) {
-                atapio_write(sector++, 1, buf);
-                buf += 512;
+            char *write = alloc_alloc(size + 512);
+            u32 ssize = (size / 512) + 1;
+            mem_cpy(write, buf, size);
+            if (ssize > ssize2) {
+                // TODO: copy sectors forward so they aren't overwritten
             }
+            for (i = 0; i < ((size / 512) + 1); i++) {
+                atapio_write(sector++, 1, write + (i * 512));
+            }
+            alloc_free(write);
             return true;
         }
-        sector += 1 + size;
+        sector += 1 + fsize;
     }
 }
 
