@@ -85,8 +85,9 @@ void kmain(void) {
     systable[2] = sys_write;
 
     kdbg_info("Populating VFS root");
-    vfs_dir_t *root = vfs_make_dir("files");
-    vfs_populate(root);
+    vfs_dir_t *root = vfs_make_dir("files"); // Naming the root directory "files" is probably not good
+    vfs_populate(root);                      // Later I will change the name to "root" and allow reads without a
+                                             // prefix
     
     ib_t ib = { // Create the information block with all relevant things and copy it to memory.
         .mbr = (u32) mbr,
@@ -110,14 +111,19 @@ void kmain(void) {
     char *buf = "Hello, world!";
     __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename));
     u32 fd = IB_RES;
-    if (fd != 1) {
+    if (fd != 1) { // 1 = true = success
         kdbg_error("Could not open motd.txt.");
     } else {
         __asm__ volatile ("int $0x80" : : "a" (1), "S" (fd), "D" ((u32) motd));
         vga_put(motd, 0x07);
     }
 
-    kdbg_info("Finished, hanging"); // Prob a better way to do this, even just a return could work ok
+    alloc_free(motd);
+
+    vfs_free(root); // Clean up
+    alloc_free(root);
+
+    kdbg_info("Finished, hanging"); // Probably a better way to do this, even just a return could work ok
 
     for (;;);
 }

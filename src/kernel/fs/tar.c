@@ -71,21 +71,25 @@ bool tar_read(char *name, u32 sector, char* buf) {
     }
 }
 
-bool tar_read_dir(char *name, u32 sector, char **buf) {
-    tar_file_t *file = alloc_alloc(sizeof(tar_file_t));
+bool tar_read_dir(char *name, u32 sector, tar_file_t **buf) {
+    /*
+     * Given a directory name and a buffer, read all files that start with that directory name into the buffer
+     */
+    tar_file_t *file = alloc_alloc(sizeof(tar_file_t)); // Allocate a file we can use as scratch space
     u32 i = 0;
     while (true) {
-        atapio_read(sector, 1, (u8 *) file);
-        if (!(mem_cmp(file->ustar, "ustar", 5))) {
+        atapio_read(sector, 1, (u8 *) file); // Same code as tar_read and tar_get_file, just loop over all files
+        if (!(mem_cmp(file->ustar, "ustar", 5))) { // Inefficient but who cares
             return true;
         }
 
         u32 size = (oct2bin(file->size, 12) + 256) / 512;
 
+        // We want to add all files that have a name starting with the given name, but that is longer than it
+        // This means we exclude the directory itself from the output
         if (mem_cmp(name, file->name, mem_len(name) - 1) && (mem_len(file->name) > mem_len(name))) {
-            buf[i] = alloc_alloc(mem_len(file->name) + 1);
-            mem_cpy(buf[i], file->name, mem_len(file->name));
-            buf[i][mem_len(file->name)] = 0;
+            buf[i] = alloc_alloc(sizeof(tar_file_t));
+            mem_cpy((u8 *) buf[i], (u8 *) file, sizeof(tar_file_t)); // Copy like a true haxxor
             ++i;
         }
         sector += 1 + size;
@@ -93,7 +97,10 @@ bool tar_read_dir(char *name, u32 sector, char **buf) {
 }
 
 u32 tar_count(char *name, u32 sector) {
-    tar_file_t *file = alloc_alloc(sizeof(tar_file_t));
+    /*
+     * Counts the number of children in a directory.
+     */
+    tar_file_t *file = alloc_alloc(sizeof(tar_file_t)); // All this code is the same as tar_read_dir basically
     u32 i = 0;
     while (true) {
         atapio_read(sector, 1, (u8 *) file);
