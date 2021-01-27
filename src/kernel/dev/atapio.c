@@ -5,6 +5,11 @@ void insw(u16 port, u16 *dest, u32 count) {
     __asm__ volatile("rep ins%z2" : "+D" (dest), "+c" (count), "=m" (*dest) : "d" (port) : "memory"); // Invoke the rep insw instruction
 }
 
+void outsw(u16 port, u16 *dest, u32 count) {
+    // Many thanks to this SO post: https://stackoverflow.com/questions/64945691/how-to-use-ins-instruction-with-gnu-assembler
+    __asm__ volatile("rep outs%z2" : "+D" (dest), "+c" (count), "=m" (*dest) : "d" (port) : "memory"); // Invoke the rep outsw instruction
+}
+
 void atapio_wait(void) {
     /*
      * Some ATAPIO operations require a 500 nanosecond delay to allow the drive time to process; the delay created by
@@ -60,6 +65,30 @@ void atapio_read(u32 lba, u8 count, char *buf) {
     for (i = 0; i < count; ++i) {   
         atapio_poll(); // Wait for the drive to be ready
         insw(ATAPIO_BUS, target, 256); // Read 256 16-bit values into the buffer
+        target += 256; // Increment
+    }
+    atapio_wait(); // Small delay
+}
+
+void atapio_write(u32 lba, u8 count, char *buf) {
+    while (port_inb(ATAPIO_BUS + 7) & 128); // '^^ Again, no idea what this is for
+    port_outb(0xe0 | ((lba >> 24) & 0x0f), ATAPIO_BUS + 6); // We output 0xe0 for the master drive, and the top few bits of the LBA
+                                                            // value to ATAPIO_BUS + 6, the drive select register
+    //port_outb(0, ATAPIO_BUS + 1);
+    port_outb(count, ATAPIO_BUS + 2); // We output the count to ATAPIO_BUS + 2, the sector count register
+    port_outb((u8) lba, ATAPIO_BUS + 3); // We output the low 8 bits of the LBA to the first LBA register
+    port_outb((u8) (lba >> 8), ATAPIO_BUS + 4); // Second 8 to the second LBA register
+    port_outb((u8) (lba >> 16), ATAPIO_BUS + 5); // Third 8 to the third LBA register
+    port_outb(0x30, ATAPIO_BUS + 7); // We output 0x30, the write command to ATAPIO_BUS + 7, the command register
+
+    u16 val;
+    u8 i, j;
+
+    u16 *target = (u16 *) buf;
+
+    for (i = 0; i < count; ++i) {   
+        atapio_poll(); // Wait for the drive to be ready
+        outsw(ATAPIO_BUS, target, 256); // Write 256 16-bit values into the buffer
         target += 256; // Increment
     }
     atapio_wait(); // Small delay
