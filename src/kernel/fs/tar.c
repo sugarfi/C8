@@ -14,6 +14,18 @@ u32 oct2bin(char *str, u32 size) {
     return n;
 }
 
+void bin2oct(char *buf, u32 n, u32 size) {
+    /*
+     * Converts a binary string to octal.
+     */
+    u32 i;
+    u32 scale = 1;
+    for (i = 0; i < size; ++i, scale *= 8, n /= 8) {
+        char digit = (n % 8) + '0';
+        buf[size - i - 1] = n;
+    }
+}
+
 tar_file_t *tar_get_file(char *name, u32 sector) {
     /*
      * Given a filename, gets the file header from the TAR archive.
@@ -32,6 +44,38 @@ tar_file_t *tar_get_file(char *name, u32 sector) {
             return file;
         }
 
+        sector += 1 + size;
+    }
+}
+
+bool tar_write(char *name, char *data, u32 size, u32 sector) {
+    /*
+     * Given a filename, writes data to it.
+     */
+    tar_file_t *file = alloc_alloc(sizeof(tar_file_t));
+    char *buf = alloc_alloc(size + 512);
+    mem_cpy(buf, data, size);
+    while (true) {
+        atapio_read(sector, 1, (u8 *) file);
+        if (!(mem_cmp(file->ustar, "ustar", 5))) {
+            return false;
+        }
+        if (mem_cmp(file->name, name, mem_len(file->name))) {
+            if (file->type == '1' || file->type == '2') {
+                return tar_write(file->linked, data, size, sector);
+            } else if (file->type == '5') {
+                return false;
+            }
+            bin2oct(file->size, size, 12);
+            kdbg_info(file->size);
+            u32 i;
+            ++sector;
+            for (i = 0; i < size; i++) {
+                atapio_write(sector++, 1, buf);
+                buf += 512;
+            }
+            return true;
+        }
         sector += 1 + size;
     }
 }

@@ -88,8 +88,12 @@ void atapio_write(u32 lba, u8 count, char *buf) {
 
     for (i = 0; i < count; ++i) {   
         atapio_poll(); // Wait for the drive to be ready
-        outsw(ATAPIO_BUS, target, 256); // Write 256 16-bit values into the buffer
-        target += 256; // Increment
+        for (j = 0; j < 256; ++j) {
+            port_outw(*target, ATAPIO_BUS);
+            __asm__ volatile ("jmp .+2; nop; nop;");
+            target++;
+        }
     }
+    port_outb(0x7e, ATAPIO_BUS + 7);
     atapio_wait(); // Small delay
 }

@@ -9,5 +9,6 @@
 
 void atapio_setup(void);
 void atapio_read(u32, u8, char *);
+void atapio_write(u32, u8, char *);
 
 #endif

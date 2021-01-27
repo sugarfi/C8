@@ -4,8 +4,13 @@ vfs_file_t *vfs_get_handle(char *name, vfs_dir_t *dir) {
     /*
      * Given a name and a directory, returns the first child of that directory with that file name.
      */
-    vfs_file_t *file;
-    for (file = dir->first_file; file == NULL || mem_cmp(name, file->name, mem_len(name)) == 0; file = file->sibling);
+    vfs_file_t *file = dir->first_file;
+    while (!mem_cmp(file->name, name, mem_len(file->name))) {
+        file = file->sibling;
+        if (file == NULL) {
+            return NULL;
+        }
+    }
     return file;
 }
 
@@ -64,11 +69,9 @@ bool vfs_write(char *data, vfs_file_t *file, u32 size) {
 
 bool vfs_internal_write(vfs_file_t *file) {
     /*
-     * Writes data from memory to the disk. Errors for now - once atapio_write and tar_write are
-     * implemented there will be actual stuff here.
+     * Writes data from memory to the disk.
      */
-    kdbg_error("writing is not implemented yet.");
-    return false;
+    return tar_write(file->name, file->content, file->size, VFS_SECTOR);
 }
 
 void vfs_flush(vfs_dir_t *dir) {
@@ -76,11 +79,21 @@ void vfs_flush(vfs_dir_t *dir) {
      * Flushes all in-memory data to the disk, and resets all data buffers.
      * (at the moment everything breaks if you all this so)
      */
-    vfs_file_t *file;
-    for (file = dir->first_file; file->sibling != NULL; file = file->sibling) {
-        vfs_internal_write(file);
-        file->size = 0;
-        alloc_free(file->content);
+    vfs_file_t *file = dir->first_file;
+    while (true) {
+        if (!vfs_internal_write(file)) {
+            kdbg_error("Internal write failed");
+        };
+        file = file->sibling;
+        if (file == NULL) {
+            break;
+        }
+    }
+    
+    vfs_dir_t *dir2 = dir->first_dir;
+    while (dir2 != NULL) {
+        vfs_flush(dir2);
+        dir2 = dir2->sibling;
     }
 }   
 
@@ -122,16 +135,18 @@ void vfs_free(vfs_dir_t *dir) {
     /*
      * Frees all the memory used by files in a vfs structure.
      */
-    vfs_file_t *file;
-    for (file = dir->first_file; file == NULL; file = file->sibling) {
+    vfs_file_t *file = dir->first_file;
+    while (file != NULL) {
         file->size = 0;
         alloc_free(file->name); // Assumes all files were created with vfs_make_file or similar
         alloc_free(file->content);
+        file = file->sibling;
     }
     
-    vfs_dir_t *dir2;
-    for (dir2 = dir->first_dir; dir2 == NULL; dir2 = dir2->sibling) { // Recursively free subdirectories
+    vfs_dir_t *dir2 = dir->first_dir;
+    while (dir2 != NULL) {
         vfs_free(dir2);
+        dir2 = dir2->sibling;
     }
 }
 

@@ -88,14 +88,14 @@ void kmain(void) {
     vfs_dir_t *root = vfs_make_dir("files"); // Naming the root directory "files" is probably not good
     vfs_populate(root);                      // Later I will change the name to "root" and allow reads without a
                                              // prefix
-    
+
     ib_t ib = { // Create the information block with all relevant things and copy it to memory.
         .mbr = (u32) mbr,
         .pd = (u32) pd,
         .idt = (u32) idt,
         .systable = (u32) systable,
         .root = (u32) root,
-        .next_fd = 1,
+        .next_fd = 0,
         .res = 0
     };
 
@@ -109,17 +109,21 @@ void kmain(void) {
     char *motd = alloc_alloc(512);
     char *filename = "files/motd.txt";
     char *buf = "Hello, world!";
+    atapio_write(0, 1, buf);
+    for(;;);
     __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename));
     u32 fd = IB_RES;
-    if (fd != 1) { // 1 = true = success
+    if (fd == 0) { // 1 = false = failure
         kdbg_error("Could not open motd.txt.");
     } else {
+        __asm__ volatile ("int $0x80" : : "a" (2), "D" (fd), "S" ((u32) buf), "c" (mem_len(buf)));
         __asm__ volatile ("int $0x80" : : "a" (1), "S" (fd), "D" ((u32) motd));
         vga_put(motd, 0x07);
     }
 
     alloc_free(motd);
 
+    vfs_flush(root);
     vfs_free(root); // Clean up
     alloc_free(root);
 

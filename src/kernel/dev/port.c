@@ -18,7 +18,7 @@ void port_outb(u8 byte, u16 port) {
     __asm__ volatile("outb %0, %1;" : : "a" (byte), "Nd" (port));
 }
 
-/*
+
 u16 port_inw(u16 port) {
     u16 out;
     
@@ -30,4 +30,4 @@ u16 port_inw(u16 port) {
 void port_outw(u16 word, u16 port) {
     __asm__ volatile("outw %0, %1;" : : "a" (word), "Nd" (port));
 }
-*/
+

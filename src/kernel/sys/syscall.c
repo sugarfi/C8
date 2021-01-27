@@ -11,8 +11,8 @@ u32 syscall_open(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
     if (file == NULL) {
         return 0;
     }
-    ib->open[fd - 1] = (u32) file;
-    return fd;
+    ib->open[fd] = (u32) file;
+    return fd + 1;
 }
  
 u32 syscall_read(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
