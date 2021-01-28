@@ -38,13 +38,15 @@ tar_file_t *tar_get_file(char *name, u32 sector) {
             return NULL;
         }
 
-        u32 size = (oct2bin(file->size, 12) + 256) / 512;
+        u32 size = (((oct2bin(file->size, 12) + 511) / 512) + 1);
         if (mem_cmp(file->name, name, mem_len(file->name))) {
+            alloc_free(file);
             return file;
         }
 
-        sector += 1 + size;
+        sector += size;
     }
+    alloc_free(file);
 }
 
 bool tar_write(char *name, char *data, u32 size, u32 sector) {
@@ -59,30 +61,45 @@ bool tar_write(char *name, char *data, u32 size, u32 sector) {
         if (!(mem_cmp(file->ustar, "ustar", 5))) {
             return false;
         }
-        u32 fsize = (oct2bin(file->size, 12) + 256) / 512;
+        u32 fsize = (((oct2bin(file->size, 12) + 511) / 512) + 1);
         if (mem_cmp(file->name, name, mem_len(file->name))) {
             if (file->type == '1' || file->type == '2') {
                 return tar_write(file->linked, data, size, sector);
             } else if (file->type == '5') {
                 return false;
             }
-            u32 ssize2 = (file->size / 512) + 1;
             bin2oct(file->size, size, 12);
             u32 i;
             ++sector;
-            char *write = alloc_alloc(size + 512);
-            u32 ssize = (size / 512) + 1;
+            u32 ssize = (((size + 511) / 512) + 1) * 512;
+            char *write = alloc_alloc(ssize);
             mem_cpy(write, buf, size);
-            if (ssize > ssize2) {
-                // TODO: copy sectors forward so they aren't overwritten
+            if (ssize > fsize) {
+                u32 diff = ssize - fsize;
+                u32 start = sector + 1 + fsize; 
+                tar_file_t *check = alloc_alloc(sizeof(tar_file_t));
+                u32 s2 = 0;
+                while (true) {
+                    atapio_read(s2, 1, (u8 *) check);
+                    if (!(mem_cmp(check->ustar, "ustar", 5))) {
+                        break;
+                    }
+                    u32 ssize3 = (((oct2bin(check->size, 12) + 511) / 512) + 1);
+                    s2 += 1 + ssize3;
+                }
+                alloc_free(check);
+                u8 *copy = alloc_alloc(512 * s2);
+                atapio_read(start, s2, copy);
+                atapio_write(start + diff, s2, copy);
+                alloc_free(copy);
             }
-            for (i = 0; i < ((size / 512) + 1); i++) {
+            for (i = 0; i < ssize; i++) {
                 atapio_write(sector++, 1, write + (i * 512));
             }
             alloc_free(write);
             return true;
         }
-        sector += 1 + fsize;
+        sector += fsize;
     }
 }
 
@@ -96,7 +113,7 @@ bool tar_read(char *name, u32 sector, char* buf) {
         if (!(mem_cmp(file->ustar, "ustar", 5))) { // If the file has no USTAR signature, we have reached the end of the archive
             return false;
         }
-        u32 size = (oct2bin(file->size, 12) + 256) / 512; // Get the size in bytes and convert it to sectors.
+        u32 size = (((oct2bin(file->size, 12) + 511) / 512) + 1); // Get the size in bytes and convert it to sectors.
         if (mem_cmp(file->name, name, mem_len(file->name))) { // The name matches so we have found our file
             if (file->type == '1' || file->type == '2') { // If the type byte is 1 or 2 the file is a link
                 return tar_read(file->linked, sector, buf);
@@ -117,7 +134,7 @@ bool tar_read(char *name, u32 sector, char* buf) {
             }
             return true;
         }
-        sector += 1 + size; // Skip the file if it wasn't a match.
+        sector += size; // Skip the file if it wasn't a match.
     }
 }
 
@@ -133,7 +150,7 @@ bool tar_read_dir(char *name, u32 sector, tar_file_t **buf) {
             return true;
         }
 
-        u32 size = (oct2bin(file->size, 12) + 256) / 512;
+        u32 size = (((oct2bin(file->size, 12) + 511) / 512) + 1);
 
         // We want to add all files that have a name starting with the given name, but that is longer than it
         // This means we exclude the directory itself from the output
@@ -142,7 +159,7 @@ bool tar_read_dir(char *name, u32 sector, tar_file_t **buf) {
             mem_cpy((u8 *) buf[i], (u8 *) file, sizeof(tar_file_t)); // Copy like a true haxxor
             ++i;
         }
-        sector += 1 + size;
+        sector += size;
     }
 }
 
@@ -159,11 +176,11 @@ u32 tar_count(char *name, u32 sector) {
             return i;
         }
 
-        u32 size = (oct2bin(file->size, 12) + 256) / 512;
+        u32 size = (((oct2bin(file->size, 12) + 511) / 512) + 1);
         
         if (mem_cmp(name, file->name, mem_len(name) - 1) && (mem_len(file->name) > mem_len(name))) {
             ++i;
         }
-        sector += 1 + size;
+        sector += size;
     }
 }

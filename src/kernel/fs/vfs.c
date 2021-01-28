@@ -154,6 +154,7 @@ void vfs_populate(vfs_dir_t *dir) {
     /*
      * Given a directory, finds all files on the disk that are a child of it and adds them to its VFS structure.
      */
+    /*
     char *path = alloc_alloc(mem_len(dir->name));
     mem_cpy(path, dir->name, mem_len(dir->name)); // Get the directory name in a spot where we can edit it
     char *path2;
@@ -175,10 +176,11 @@ void vfs_populate(vfs_dir_t *dir) {
     path = alloc_alloc(mem_len(path2));
     mem_cpy(path, path2, mem_len(path2));
     alloc_free(path2);
+    */
 
-    u32 size = tar_count(path, VFS_SECTOR); // Get the number of children of the file
+    u32 size = tar_count(dir->name, VFS_SECTOR); // Get the number of children of the file
     tar_file_t **files = alloc_alloc(sizeof(tar_file_t *) * size);
-    tar_read_dir(path, VFS_SECTOR, files); // Read every child
+    tar_read_dir(dir->name, VFS_SECTOR, files); // Read every child
 
     u32 i;
     for (i = 0; i < size; i++) {
@@ -193,7 +195,6 @@ void vfs_populate(vfs_dir_t *dir) {
     }
 
     alloc_free(files); // Clean up
-    alloc_free(path);
 }
 
 vfs_dir_t *vfs_make_dir(char *name) {

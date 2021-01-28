@@ -97,7 +97,7 @@ void kmain(void) {
     systable[2] = sys_write;
 
     kdbg_info("Populating VFS root");
-    vfs_dir_t *root = vfs_make_dir("files"); // Naming the root directory "files" is probably not good
+    vfs_dir_t *root = vfs_make_dir("files/"); // Naming the root directory "files" is probably not good
     vfs_populate(root);                      // Later I will change the name to "root" and allow reads without a
                                              // prefix
 

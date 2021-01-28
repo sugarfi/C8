@@ -74,6 +74,12 @@ void *alloc_alloc(u32 size) {
                 };
                 mem_cpy((u8 *) i + sizeof(alloc_header_t) + size, (u8 *) &new_header, sizeof(alloc_header_t));
             }
+            /*
+            u32 j;
+            for (j = 0; j < size; j++) {
+                ((u8 *) i)[sizeof(alloc_header_t) + j] = 0;
+            }
+            */
             return (void *) (i + sizeof(alloc_header_t));
         }
     }
@@ -91,6 +97,12 @@ void *alloc_alloc(u32 size) {
         .flags = 0
     };
     mem_cpy((u8 *) addr, (u8 *) &new_header, sizeof(alloc_header_t));
+    /*
+    u32 j;
+    for (j = 0; j < size; j++) {
+        ((u8 *) addr)[sizeof(alloc_header_t) + j] = 0;
+    }
+    */
     return (void *) (addr + sizeof(alloc_header_t)); // And return the new pointer
 }
 

@@ -29,6 +29,7 @@ u32 syscall_write(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
      * Invoked on int $0x80, eax=2
      */
     ib_t *ib = (ib_t *) 0x500;
+    vfs_dir_t *root = (vfs_dir_t *) ib->root;
     vfs_file_t *file = (vfs_file_t *) ib->open[di - 1];
     vfs_write((char *) si, file, c);
     return 1;
