@@ -4,18 +4,18 @@
 mov si, mbr
 mov cx, 4
 
-.find_active:
+find_active:
 lodsb
 test al, 0x80
-jnz .found_active
+jnz found_active
 add si, 15
 
 dec cx
-jnz .find_active
+jnz find_active
 
-jmp .no_active
+jmp no_active
 
-.found_active:
+found_active:
 dec si
 add si, 8
 mov cx, 4
@@ -35,14 +35,14 @@ int 0x10
 
 jmp 0x7e00
 
-.no_active:
+no_active:
 mov si, no_active_msg
 mov ah, 0x0e
-.print_msg:
+print_msg:
 lodsb
 int 0x10
 or al, al
-jnz .print_msg
+jnz print_msg
 
 cli
 hlt
