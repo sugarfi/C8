@@ -40,7 +40,6 @@ tar_file_t *tar_get_file(char *name, u32 sector) {
 
         u32 size = (((oct2bin(file->size, 12) + 511) / 512) + 1);
         if (mem_cmp(file->name, name, mem_len(file->name))) {
-            alloc_free(file);
             return file;
         }
 
@@ -54,52 +53,31 @@ bool tar_write(char *name, char *data, u32 size, u32 sector) {
      * Given a filename, writes data to it.
      */
     tar_file_t *file = alloc_alloc(sizeof(tar_file_t));
-    char *buf = alloc_alloc(size + 512);
-    mem_cpy(buf, data, size);
     while (true) {
-        atapio_read(sector, 1, (u8 *) file);
-        if (!(mem_cmp(file->ustar, "ustar", 5))) {
+        atapio_read(sector, 1, (u8 *) file); // Read the file header
+        if (!(mem_cmp(file->ustar, "ustar", 5))) { // If the file has no USTAR signature, we have reached the end of the archive
             return false;
         }
-        u32 fsize = (((oct2bin(file->size, 12) + 511) / 512) + 1);
-        if (mem_cmp(file->name, name, mem_len(file->name))) {
-            if (file->type == '1' || file->type == '2') {
+        u32 ssize = (oct2bin(file->size, 12) + 511) / 512;
+        if ((mem_len(file->name) == mem_len(name)) && mem_cmp(file->name, name, mem_len(file->name))) { // The name matches so we have found our file
+            if (file->type == '1' || file->type == '2') { // If the type byte is 1 or 2 the file is a link
                 return tar_write(file->linked, data, size, sector);
-            } else if (file->type == '5') {
+            } else if (file->type == '5') { // If the file type is 5 it is a directory so we should fail automatically
                 return false;
-            }
-            bin2oct(file->size, size, 12);
+            } // Otherwise the file is a normal file
             u32 i;
-            ++sector;
-            u32 ssize = (((size + 511) / 512) + 1) * 512;
-            char *write = alloc_alloc(ssize);
-            mem_cpy(write, buf, size);
-            if (ssize > fsize) {
-                u32 diff = ssize - fsize;
-                u32 start = sector + 1 + fsize; 
-                tar_file_t *check = alloc_alloc(sizeof(tar_file_t));
-                u32 s2 = 0;
-                while (true) {
-                    atapio_read(s2, 1, (u8 *) check);
-                    if (!(mem_cmp(check->ustar, "ustar", 5))) {
-                        break;
-                    }
-                    u32 ssize3 = (((oct2bin(check->size, 12) + 511) / 512) + 1);
-                    s2 += 1 + ssize3;
-                }
-                alloc_free(check);
-                u8 *copy = alloc_alloc(512 * s2);
-                atapio_read(start, s2, copy);
-                atapio_write(start + diff, s2, copy);
-                alloc_free(copy);
-            }
-            for (i = 0; i < ssize; i++) {
-                atapio_write(sector++, 1, write + (i * 512));
+            ++sector; // Skip over the file header sector
+            u8 *write = alloc_alloc(size + 512);
+            u32 ssize2 = (size + 511) / 512;
+            mem_cpy(write, data, size);
+            for (i = 0; i < ssize2; i++) {
+                atapio_write(sector++, 1, write + (512 * i)); // Read each sector of the file, one by one, into the buffer.
             }
             alloc_free(write);
+            alloc_free(file);
             return true;
         }
-        sector += fsize;
+        sector += ssize + 1; // Skip the file if it wasn't a match.
     }
 }
 
@@ -107,7 +85,7 @@ bool tar_read(char *name, u32 sector, char* buf) {
     /*
      * Reads a single file into a buffer, given the starting sector of the TAR archive.
      */
-    tar_file_t *file;
+    tar_file_t *file = alloc_alloc(sizeof(tar_file_t));
     while (true) {
         atapio_read(sector, 1, (u8 *) file); // Read the file header
         if (!(mem_cmp(file->ustar, "ustar", 5))) { // If the file has no USTAR signature, we have reached the end of the archive

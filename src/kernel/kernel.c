@@ -12,36 +12,31 @@
 #include <dev/vga.h>
 #include <sys/syscall.h>
 
+#define MAP_PAGE(N) \
+    u32 __attribute__((aligned(4096))) pt##N[1024]; \
+    for (i = 0; i < 1024; ++i) { \
+        pt##N[i] = (i << 12) | 3 + ((1024 << 12) * N); \
+    } \
+    pd[N] = ((u32) pt##N) | 3;
+
 void kmain(void) {
     kdbg_init();
     kdbg_info("Intialized kernel debugger"); // Initialize kdbg and print a message
 
     mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
 
-    u32 __attribute__((aligned(4096))) pt0[1024], pt1[124], pt2[1024], pt3[1024];
     u32 __attribute__((aligned(4096))) pd[1024];
 
-    kdbg_info("Identity paging the first 8 MiB"); // Identity page 8 MiB of memory
+    kdbg_info("Identity paging the first some memory");
     u32 i;
-    for (i = 0; i < 1024; i++) {
-        pt0[i] = (i << 12) | 3;
-    }
-    pd[0] = ((u32) pt0) | 3;
-
-    for (i = 0; i < 1024; i++) {
-        pt1[i] = (i << 12) | 3 + (1024 << 12) * 1;
-    }
-    pd[1] = ((u32) pt1) | 3;
-
-    for (i = 0; i < 1024; i++) {
-        pt2[i] = (i << 12) | 3 + (1024 << 12) * 2;
-    }
-    pd[2] = ((u32) pt2) | 3;
-
-    for (i = 0; i < 1024; i++) {
-        pt3[i] = (i << 12) | 3 + (1024 << 12) * 3;
-    }
-    pd[3] = ((u32) pt3) | 3;
+    MAP_PAGE(0);
+    MAP_PAGE(1);
+    MAP_PAGE(2);
+    MAP_PAGE(3);
+    MAP_PAGE(4);
+    MAP_PAGE(5);
+    MAP_PAGE(6);
+    MAP_PAGE(7);
 
     page_enable((u32 **) &pd); // Enable paging
 
@@ -134,7 +129,7 @@ void kmain(void) {
     alloc_free(motd);
 
     vfs_flush(root);
-    vfs_free(root); // Clean up
+    //vfs_free(root); // Clean up
     alloc_free(root);
 
     kdbg_info("Finished, hanging"); // Probably a better way to do this, even just a return could work ok

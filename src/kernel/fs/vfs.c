@@ -71,7 +71,11 @@ bool vfs_internal_write(vfs_file_t *file) {
     /*
      * Writes data from memory to the disk.
      */
-    return tar_write(file->name, file->content, file->size, VFS_SECTOR);
+    if (file->size > 0) {
+        return tar_write(file->name, file->content, file->size, VFS_SECTOR);
+    } else {
+        return true;
+    }
 }
 
 void vfs_flush(vfs_dir_t *dir) {
@@ -80,16 +84,13 @@ void vfs_flush(vfs_dir_t *dir) {
      * (at the moment everything breaks if you all this so)
      */
     vfs_file_t *file = dir->first_file;
-    while (true) {
+    while (file != NULL) {
         if (!vfs_internal_write(file)) {
             kdbg_error("Internal write failed");
         };
         file = file->sibling;
-        if (file == NULL) {
-            break;
-        }
     }
-    
+
     vfs_dir_t *dir2 = dir->first_dir;
     while (dir2 != NULL) {
         vfs_flush(dir2);
@@ -143,11 +144,13 @@ void vfs_free(vfs_dir_t *dir) {
         file = file->sibling;
     }
     
+    /*
     vfs_dir_t *dir2 = dir->first_dir;
     while (dir2 != NULL) {
         vfs_free(dir2);
         dir2 = dir2->sibling;
     }
+    */
 }
 
 void vfs_populate(vfs_dir_t *dir) {
@@ -221,5 +224,6 @@ vfs_file_t *vfs_make_file(char *name) {
     out->parent = NULL;
     mem_cpy(out->name, name, mem_len(name));
     out->name[mem_len(name)] = 0;
+    out->size = 0;
     return out;
 }
