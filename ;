@@ -55,6 +55,7 @@ bool tar_write(char *name, char *data, u32 size, u32 sector) {
     tar_file_t *file = alloc_alloc(sizeof(tar_file_t));
     while (true) {
         atapio_read(sector, 1, (u8 *) file); // Read the file header
+        kdbg_info(file->name);
         if (!(mem_cmp(file->ustar, "ustar", 5))) { // If the file has no USTAR signature, we have reached the end of the archive
             return false;
         }
@@ -65,11 +66,11 @@ bool tar_write(char *name, char *data, u32 size, u32 sector) {
             } else if (file->type == '5') { // If the file type is 5 it is a directory so we should fail automatically
                 return false;
             } // Otherwise the file is a normal file
+            u32 i;
             ++sector; // Skip over the file header sector
             u8 *write = alloc_alloc(size + 512);
             u32 ssize2 = (size + 511) / 512;
             mem_cpy(write, data, size);
-            u32 i;
             for (i = 0; i < ssize2; i++) {
                 atapio_write(sector++, 1, write + (512 * i)); // Read each sector of the file, one by one, into the buffer.
             }

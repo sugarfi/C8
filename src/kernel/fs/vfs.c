@@ -83,12 +83,11 @@ void vfs_flush(vfs_dir_t *dir) {
      * Flushes all in-memory data to the disk, and resets all data buffers.
      * (at the moment everything breaks if you all this so)
      */
-    vfs_file_t *file = dir->first_file;
-    while (file != NULL) {
+    vfs_file_t *file;
+    for (file = dir->first_file; file != NULL; file = file->sibling) {
         if (!vfs_internal_write(file)) {
             kdbg_error("Internal write failed");
         };
-        file = file->sibling;
     }
 
     vfs_dir_t *dir2 = dir->first_dir;
