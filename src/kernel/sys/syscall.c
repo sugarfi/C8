@@ -1,6 +1,6 @@
 #include <sys/syscall.h>
 
-u32 syscall_open(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
+u32 __attribute__((no_caller_saved_registers)) syscall_open (u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
     /*
      * Invoked on int $0x80, eax=0
      */
@@ -15,7 +15,7 @@ u32 syscall_open(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
     return fd + 1;
 }
  
-u32 syscall_read(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
+u32 __attribute__((no_caller_saved_registers)) syscall_read(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
     /*
      * Invoked on int $0x80, eax=1
      */
@@ -24,7 +24,7 @@ u32 syscall_read(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
     return (u32) vfs_read(file, (char *) di);
 }
 
-u32 syscall_write(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
+u32 __attribute__((no_caller_saved_registers)) syscall_write(u32 a, u32 b, u32 c, u32 d, u32 si, u32 di) {
     /*
      * Invoked on int $0x80, eax=2
      */

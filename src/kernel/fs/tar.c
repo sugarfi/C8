@@ -68,6 +68,7 @@ bool tar_write(char *name, char *data, u32 size, u32 sector) {
             ++sector; // Skip over the file header sector
             u8 *write = alloc_alloc(size + 512);
             u32 ssize2 = (size + 511) / 512;
+            mem_set(write, 0, size + 512);
             mem_cpy(write, data, size);
             u32 i;
             for (i = 0; i < ssize2; i++) {

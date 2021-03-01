@@ -11,6 +11,7 @@
 #include <mem/alloc.h>
 #include <dev/vga.h>
 #include <sys/syscall.h>
+#include <dev/pic.h>
 
 #define MAP_PAGE(N) \
     u32 __attribute__((aligned(4096))) pt##N[1024]; \
@@ -21,7 +22,10 @@
 
 void kmain(void) {
     kdbg_init();
-    kdbg_info("Intialized kernel debugger"); // Initialize kdbg and print a message
+    kdbg_info("Initialized kernel debugger"); // Initialize kdbg and print a message
+
+    kdbg_info("Remapping the PIC");
+    pic_init(0x20, 0x28);
 
     mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
 
@@ -93,8 +97,8 @@ void kmain(void) {
 
     kdbg_info("Populating VFS root");
     vfs_dir_t *root = vfs_make_dir("files/"); // Naming the root directory "files" is probably not good
-    vfs_populate(root);                      // Later I will change the name to "root" and allow reads without a
-                                             // prefix
+    vfs_populate(root);                       // Later I will change the name to "root" and allow reads without a
+                                              // prefix
 
     ib_t ib = { // Create the information block with all relevant things and copy it to memory.
         .mbr = (u32) mbr,
@@ -115,8 +119,12 @@ void kmain(void) {
     kdbg_info("Reading and printing motd.txt");
     char *motd = alloc_alloc(512);
     char *filename = "files/motd.txt";
-    char *buf = "Hello, world!";
+    char *buf = (char *) alloc_alloc(1024);
+    mem_set(buf, 'a', 1024);
+    buf[1023] = 0;
+
     __asm__ volatile ("int $0x80" : : "a" (0), "S" ((u32) filename));
+
     u32 fd = IB_RES;
     if (fd == 0) { // 0 = false = failure
         kdbg_error("Could not open motd.txt.");
@@ -127,6 +135,7 @@ void kmain(void) {
     }
 
     alloc_free(motd);
+    alloc_free(buf);
 
     vfs_flush(root);
     //vfs_free(root); // Clean up

@@ -28,5 +28,6 @@ __attribute__((interrupt)) void sys_irq(void* frame) {
         return;
     }
 
-    ib->res = call.func(eax, ebx, ecx, edx, esi, edi); // The result of the system call is store in ib->res
+    ib->res = call.func(eax, ebx, ecx, edx, esi, edi); // The result of the system call is stored in ib->res
+    pic_eoi(0x80);
 }

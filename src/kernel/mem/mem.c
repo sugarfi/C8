@@ -42,3 +42,13 @@ void mem_cat(char *a, char *b) {
         a[i + mem_len(a)] = b[i];
     }
 }
+
+void mem_set(char *s, char x, u32 n) {
+    /*
+     * Set the first n bytes of s to x.
+     */
+    u32 i;
+    for (i = 0; i < n; i++) {
+        s[i] = x;
+    }
+}

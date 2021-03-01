@@ -4,8 +4,9 @@
 #include <types.h>
 #include <kdbg/kdbg.h>
 
-typedef void (*isr_f_t)(void*, u32);
-typedef void (*irq_f_t)(void*);
+typedef void (*isr_f_t)(void *);
+typedef void (*isr_f_code_t)(void *, u32);
+typedef void (*irq_f_t)(void *);
 
 typedef struct __attribute__((packed)) {
     u16 offset_lo;

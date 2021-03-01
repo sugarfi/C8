@@ -143,13 +143,11 @@ void vfs_free(vfs_dir_t *dir) {
         file = file->sibling;
     }
     
-    /*
     vfs_dir_t *dir2 = dir->first_dir;
     while (dir2 != NULL) {
         vfs_free(dir2);
         dir2 = dir2->sibling;
     }
-    */
 }
 
 void vfs_populate(vfs_dir_t *dir) {
