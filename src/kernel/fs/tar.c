@@ -146,7 +146,7 @@ u32 tar_count(char *name, u32 sector) {
     /*
      * Counts the number of children in a directory.
      */
-    tar_file_t *file = alloc_alloc(sizeof(tar_file_t)); // All this code is the same as tar_read_dir basically
+    tar_file_t *file = alloc_alloc(sizeof(tar_file_t) * 2); // All this code is the same as tar_read_dir basically
     u32 i = 0;
     while (true) {
         atapio_read(sector, 1, (u8 *) file);

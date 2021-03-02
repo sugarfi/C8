@@ -3,7 +3,7 @@
 
 CC=gcc # change if needed
 LD=ld
-CFLAGS=-fno-stack-protector -mgeneral-regs-only -mno-red-zone -ffreestanding -fno-pie -m32 -c -I src/kernel -I src/kernel/lib -nostdinc -nostdlib -std=c99 -Os -fno-omit-frame-pointer
+CFLAGS=-fno-stack-protector -mgeneral-regs-only -mno-red-zone -ffreestanding -fno-pie -m32 -c -I src/kernel -I src/kernel/lib -nostdinc -nostdlib -std=c99 -Os -fno-omit-frame-pointer -g
 LDFLAGS=-T linker.ld -melf_i386
 CSOURCES=$(shell find src/kernel -name '*.c')
 COBJECTS=$(CSOURCES:.c=.o)

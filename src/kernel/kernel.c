@@ -41,6 +41,14 @@ void kmain(void) {
     MAP_PAGE(5);
     MAP_PAGE(6);
     MAP_PAGE(7);
+    MAP_PAGE(8);
+    MAP_PAGE(9);
+    MAP_PAGE(10);
+    MAP_PAGE(11);
+    MAP_PAGE(12);
+    MAP_PAGE(13);
+    MAP_PAGE(14);
+    MAP_PAGE(15);
 
     page_enable((u32 **) &pd); // Enable paging
 

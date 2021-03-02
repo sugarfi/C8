@@ -3,5 +3,5 @@ let
 in
 pkgs.mkShell {
     name = "c8-dev";
-    buildInputs = with pkgs; [ gnumake gcc gnutar nasm qemu ];
+    buildInputs = with pkgs; [ gnumake gcc gnutar nasm qemu gdb ];
 }

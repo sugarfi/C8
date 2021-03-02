@@ -43,7 +43,7 @@ void atapio_poll(void) {
 }
 
 void atapio_setup(void) {
-    port_outb(0b01000000, 0x3f6); // I forget why I wrote this but we probably don't need it
+    port_outb(0b00000010, 0x3f6); // I forget why I wrote this but we probably don't need it
 }
 
 void atapio_read(u32 lba, u8 count, char *buf) {
@@ -56,6 +56,7 @@ void atapio_read(u32 lba, u8 count, char *buf) {
     port_outb((u8) (lba >> 8), ATAPIO_BUS + 4); // Second 8 to the second LBA register
     port_outb((u8) (lba >> 16), ATAPIO_BUS + 5); // Third 8 to the third LBA register
     port_outb(0x20, ATAPIO_BUS + 7); // We output 0x20, the read command to ATAPIO_BUS + 7, the command register
+    kdbg_info("this is a long message that will be cut off");
 
     u16 val;
     u8 i, j;

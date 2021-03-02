@@ -6,7 +6,7 @@ void trace_hex_print(u32 num) {
     u32 i = 0;
     char out[9];
     mem_set(out, '0', 8);
-    out[8] = 0;
+    out[16] = 0;
     while (num) {
         out[7 - i] = HEX_CHARS[num & 0x0f];
         num >>= 4;
@@ -15,7 +15,7 @@ void trace_hex_print(u32 num) {
     kdbg_error(out);
 }
 
-void __attribute__((no_caller_saved_registers)) trace_print(void) {
+void trace_print(void) {
     trace_frame_t *stack;
     __asm__ volatile ("movl %%ebp, %0;" : "=r" (stack) : : );
     kdbg_error("Stack trace: ");

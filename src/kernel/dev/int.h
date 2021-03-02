@@ -4,8 +4,16 @@
 #include <types.h>
 #include <kdbg/kdbg.h>
 
-typedef void (*isr_f_t)(void *);
-typedef void (*isr_f_code_t)(void *, u32);
+typedef struct __attribute__((packed)) {
+    u32 ip;
+    u32 cs;
+    u32 flags;
+    u32 sp;
+    u32 ss;
+} idt_frame_t;
+
+typedef void (*isr_f_t)(idt_frame_t *);
+typedef void (*isr_f_code_t)(idt_frame_t *, u32);
 typedef void (*irq_f_t)(void *);
 
 typedef struct __attribute__((packed)) {

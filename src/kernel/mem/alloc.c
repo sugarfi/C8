@@ -23,7 +23,7 @@ void *alloc_alloc_page(void) {
              */
             if ((ib->allocated[i] & (1 << j)) == 0) { // Check for a freed page
                 ib->allocated[i] |= (1 << j); // If it is freed, we mark it as used
-                u8 *ptr = (u8 *) (((i * 32) + j + 1024) << 12) + (1024 << 12); // Get its address
+                u8 *ptr = (u8 *) (((i * 32) + j + 1024) << 12) + (8192 << 12); // Get its address
                 return (void *) ptr;
             }
         }
