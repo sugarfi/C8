@@ -3,7 +3,7 @@
 
 #include <types.h>
 
-void page_enable(u32 **);
+void page_enable(u32);
 void page_tlb_flush(void);
 
 #endif

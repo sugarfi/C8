@@ -16,7 +16,7 @@
 #define MAP_PAGE(N) \
     u32 __attribute__((aligned(4096))) pt##N[1024]; \
     for (i = 0; i < 1024; ++i) { \
-        pt##N[i] = (i << 12) | 3 + ((1024 << 12) * N); \
+        pt##N[i] = ((i * 1024) + (N * 1024 * 1024)) | 3; \
     } \
     pd[N] = ((u32) pt##N) | 3;
 
@@ -45,9 +45,9 @@ void kmain(void) {
     MAP_PAGE(14);
     MAP_PAGE(15);
 
-    page_enable((u32 **) &pd); // Enable paging
+    page_enable((u32) pd); // Enable paging
 
-    mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
+    //mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
 
     kdbg_info("Setting up interrupts");
     idt_entry_t idt[256];

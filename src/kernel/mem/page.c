@@ -1,6 +1,6 @@
 #include <mem/page.h>
 
-void page_enable(u32 **pd) {
+void page_enable(u32 pd) {
     /*
      * Enable paging.
      */

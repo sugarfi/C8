@@ -23,9 +23,9 @@ idt_isr_stub:
     push ebx
     push eax
     call idt_isr_handler
-    popad
     pop eax
     pop ebx
+    popad
     sti
     iret
 
@@ -37,8 +37,8 @@ idt_irq_stub:
     cld
     push eax
     call idt_irq_handler
-    popad
     pop eax
+    popad
     sti
     iret
 
