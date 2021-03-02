@@ -1,10 +1,10 @@
 #include <dev/pic.h>
 
 void pic_eoi(u32 irq) {
+    port_outb(0x20, PIC1);
     if (irq >= PIC2_OFF) {
         port_outb(0x20, PIC2);
     }
-    port_outb(0x20, PIC1);
 }
 
 void pic_init(void) {

@@ -1,7 +1,7 @@
 section .entry
 
 [bits 32]
-mov ebp, 0x90000
+mov ebp, stack_top
 mov esp, ebp
 xor ebp, ebp
 in al, 0x70
@@ -24,6 +24,21 @@ idt_isr_stub:
     push eax
     call idt_isr_handler
     popad
+    pop eax
+    pop ebx
+    sti
+    iret
+
+extern idt_irq_handler
+idt_irq_stub:
+    cli
+    pop eax 
+    pushad
+    cld
+    push eax
+    call idt_irq_handler
+    popad
+    pop eax
     sti
     iret
 
@@ -36,6 +51,13 @@ idt_isr_stub:
         push byte %1
         jmp idt_isr_stub
 %endmacro
+
+%macro make_irq 1
+    global idt_irq%1
+    idt_irq%1:
+        push byte %1
+        jmp idt_irq_stub
+%endmacro 
 
 make_isr 0,  0
 make_isr 1,  0
@@ -69,3 +91,26 @@ make_isr 28, 0
 make_isr 29, 0
 make_isr 30, 1
 make_isr 31, 0
+
+make_irq  0
+make_irq  1
+make_irq  2
+make_irq  3
+make_irq  4
+make_irq  5
+make_irq  6
+make_irq  7
+make_irq  8
+make_irq  9
+make_irq 10
+make_irq 11
+make_irq 12
+make_irq 13
+make_irq 14
+make_irq 15
+
+section .bss
+
+stack_bottom:
+resb 16384
+stack_top:
