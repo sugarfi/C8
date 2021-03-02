@@ -27,10 +27,10 @@ idt_isr_stub:
 %macro make_isr 2
     global idt_isr%1
     idt_isr%1:
-        push byte %1
         %ifidn %2, 1
             push byte 0
         %endif
+        push byte %1
         jmp idt_isr_stub
 %endmacro
 

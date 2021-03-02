@@ -50,13 +50,11 @@ void atapio_read(u32 lba, u8 count, char *buf) {
     while (port_inb(ATAPIO_BUS + 7) & 128); // '^^ Again, no idea what this is for
     port_outb(0xe0 | ((lba >> 24) & 0x0f), ATAPIO_BUS + 6); // We output 0xe0 for the master drive, and the top few bits of the LBA
                                                             // value to ATAPIO_BUS + 6, the drive select register
-    port_outb(0, ATAPIO_BUS + 1);
     port_outb(count, ATAPIO_BUS + 2); // We output the count to ATAPIO_BUS + 2, the sector count register
     port_outb((u8) lba, ATAPIO_BUS + 3); // We output the low 8 bits of the LBA to the first LBA register
     port_outb((u8) (lba >> 8), ATAPIO_BUS + 4); // Second 8 to the second LBA register
     port_outb((u8) (lba >> 16), ATAPIO_BUS + 5); // Third 8 to the third LBA register
     port_outb(0x20, ATAPIO_BUS + 7); // We output 0x20, the read command to ATAPIO_BUS + 7, the command register
-    kdbg_info("this is a long message that will be cut off");
 
     u16 val;
     u8 i, j;

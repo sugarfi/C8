@@ -1,11 +1,12 @@
 #include <dev/int.h>
-#include <kdbg/trace.h>
 
 extern void idt_isr_int_handler(void);
 
 void idt_isr_handler(u32 err, u32 code) {
     kdbg_error("Got ISR");
+    kdbg_error("Number: ");
     trace_hex_print(err);
+    kdbg_error("Code: ");
     trace_hex_print(code);
     trace_print();
     for(;;);

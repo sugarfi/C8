@@ -25,7 +25,7 @@ void kmain(void) {
     kdbg_info("Initialized kernel debugger"); // Initialize kdbg and print a message
 
     kdbg_info("Remapping the PIC");
-    pic_init(0x20, 0x28);
+    pic_init();
 
     mbr_t *mbr = (mbr_t *) (0x7c00 + 440);
 
@@ -103,6 +103,9 @@ void kmain(void) {
     };
     systable[2] = sys_write;
 
+    kdbg_info("Initializing ATAPIO driver");
+    atapio_setup(); // Might not be necessary but whatever :/
+
     kdbg_info("Populating VFS root");
     vfs_dir_t *root = vfs_make_dir("files/"); // Naming the root directory "files" is probably not good
     vfs_populate(root);                       // Later I will change the name to "root" and allow reads without a
@@ -121,8 +124,9 @@ void kmain(void) {
     kdbg_info("Writing information block to address 0x00000500");
     mem_cpy((char *) 0x500, (char *) &ib, sizeof(ib_t));
 
-    kdbg_info("Initializing ATAPIO driver");
-    atapio_setup(); // Might not be necessary but whatever :/
+    kdbg_info("ok!");
+    vga_put("Hello, world!", 0x07);
+    for(;;);
 
     kdbg_info("Reading and printing motd.txt");
     char *motd = alloc_alloc(512);

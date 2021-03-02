@@ -3,6 +3,8 @@
 
 #include <types.h>
 #include <kdbg/kdbg.h>
+#include <dev/pic.h>
+#include <kdbg/trace.h>
 
 typedef struct __attribute__((packed)) {
     u32 ip;
