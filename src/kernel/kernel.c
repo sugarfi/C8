@@ -24,6 +24,26 @@ void kmain(void) {
     kdbg_init();
     kdbg_info("Initialized kernel debugger"); // Initialize kdbg and print a message
 
+    kdbg_info("Setting up interrupts");
+    idt_entry_t idt[256];
+    idt_fill(idt); // Set up an IDT and fill it with ISRs
+
+    irq_f_t sys_irq_f = &sys_irq;
+    idt_entry_t sys_irq_entry = { // Add the syscall IRQ as entry 128 in the IDT.
+        .offset_lo = ((u32) sys_irq_f) & 0xffff,
+        .selector = 0x08,
+        .zero = 0,
+        .type = 0b10001110,
+        .offset_hi = ((u32) sys_irq_f) >> 16
+    };
+    idt[128] = sys_irq_entry;
+
+    idt_desc_t idt_desc = { // Create the IDT descriptor and load it.
+        .size = 256 * sizeof(idt_entry_t) - 1,
+        .ptr = (u32) &idt
+    };
+    idt_load(&idt_desc);
+
     kdbg_info("Remapping the PIC");
     pic_init();
 
@@ -54,26 +74,6 @@ void kmain(void) {
 
     kdbg_info("Initializing allocator");
     alloc_base = (u32) alloc_alloc_page();
-
-    kdbg_info("Setting up interrupts");
-    idt_entry_t idt[256];
-    idt_fill(idt); // Set up an IDT and fill it with ISRs
-
-    irq_f_t sys_irq_f = &sys_irq;
-    idt_entry_t sys_irq_entry = { // Add the syscall IRQ as entry 128 in the IDT.
-        .offset_lo = ((u32) sys_irq_f) & 0xffff,
-        .selector = 0x08,
-        .zero = 0,
-        .type = 0b10001110,
-        .offset_hi = ((u32) sys_irq_f) >> 16
-    };
-    idt[128] = sys_irq_entry;
-
-    idt_desc_t idt_desc = { // Create the IDT descriptor and load it.
-        .size = 256 * sizeof(idt_entry_t) - 1,
-        .ptr = (u32) &idt
-    };
-    idt_load(&idt_desc);
 
     kdbg_info("Filling system call table with invalid entries"); // We want the whole syscall table to be filled with invalid entries
     systable_entry_t systable[1024];

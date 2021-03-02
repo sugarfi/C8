@@ -1,7 +1,10 @@
+in al, 0x70
+or al, 0x80
+out 0x70, al
+cli
 in al, 0x92
 or al, 2
 out 0x92, al
-cli
 lgdt [gdtr]
 mov eax, cr0
 or al, 1

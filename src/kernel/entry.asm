@@ -4,6 +4,9 @@ section .entry
 mov ebp, 0x90000
 mov esp, ebp
 xor ebp, ebp
+in al, 0x70
+and al, 0x7f
+out 0x70, al
 sti
 
 extern kmain
